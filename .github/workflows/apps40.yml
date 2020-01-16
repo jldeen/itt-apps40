@@ -14,7 +14,7 @@ env:
   acrVersion: v2
 
   # tailwind deployment
-  twtInfraDeploy: deployment.json
+  tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: /helm-values/generate-config.ps1
   tailwindChartValues: /values.yaml
@@ -23,7 +23,6 @@ env:
 
   # Github SECRETS
   sqlServerUser: sqladmin
-  sqlServePassword: Password2020!
 
 jobs:
   # uploadIaC:
@@ -71,7 +70,7 @@ jobs:
 
         az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
           --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=$azureClientSecret \
-          sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=$sqlServePassword \
+          sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
           aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
 
     # Application Insights (using preview extension)
@@ -122,7 +121,7 @@ jobs:
 
     - name: 'Create Helm values file'
       run: |
-        pwsh $tailwindChartValuesScript -resourceGroup resourceGroup -sqlPwd $sqlServePassword -outputFile $tailwindChartValues
+        pwsh $tailwindChartValuesScript -resourceGroup resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
 
   buildApplication:
     runs-on: self-hosted
