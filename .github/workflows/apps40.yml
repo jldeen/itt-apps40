@@ -65,11 +65,13 @@ jobs:
     
     # Deploy backend infrastructure
     - name: 'Setup Backend Infra'
+      env:
+        azureClientID: e13daae5-2cb2-4df1-ab7d-7dbe139e3e95
       run: |
         vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
 
         az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
-          --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=$azureClientSecret \
+          --parameters servicePrincipalId=$azureClientID servicePrincipalSecret={{ secrets.CLIENT_SECRET }} \
           sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
           aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
 
@@ -123,37 +125,37 @@ jobs:
       run: |
         pwsh $tailwindChartValuesScript -resourceGroup resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
 
-  buildApplication:
-    runs-on: self-hosted
-    needs: deployInfra
-    steps:
+  # buildApplication:
+  #   runs-on: self-hosted
+  #   needs: deployInfra
+  #   steps:
     
-    # checkout branch
-    - uses: actions/checkout@master
+  #   # checkout branch
+  #   - uses: actions/checkout@master
 
-    # log into Azure
-    - name: 'Login via Azure CLI'
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #   # log into Azure
+  #   - name: 'Login via Azure CLI'
+  #     uses: azure/login@v1
+  #     with:
+  #       creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    # docker login
-    - name: 'Docker Login'
-      uses: greenie-msft/container-actions/docker-login@master
-      with:
-        login-server: ${{ secrets.CONTAINER_REGISTRY }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
+  #   # docker login
+  #   - name: 'Docker Login'
+  #     uses: greenie-msft/container-actions/docker-login@master
+  #     with:
+  #       login-server: ${{ secrets.CONTAINER_REGISTRY }}
+  #       username: ${{ secrets.REGISTRY_USERNAME }}
+  #       password: ${{ secrets.REGISTRY_PASSWORD }}
     
-    # build/push docker image
-    - name: 'build/push'
-      run: |
-        docker build Source/Tailwind.Traders.Web/ -t ${{ secrets.CONTAINER_REGISTRY }}/$webappName:$GITHUB_SHA
-        docker push ${{ secrets.CONTAINER_REGISTRY }}/$webappName:$GITHUB_SHA
+  #   # build/push docker image
+  #   - name: 'build/push'
+  #     run: |
+  #       docker build Source/Tailwind.Traders.Web/ -t ${{ secrets.CONTAINER_REGISTRY }}/$webappName:$GITHUB_SHA
+  #       docker push ${{ secrets.CONTAINER_REGISTRY }}/$webappName:$GITHUB_SHA
   
   deployApplication:
     runs-on: self-hosted
-    needs: buildApplication
+    needs: deployInfra
     steps:
       # create webapp
       - name: 'deploy app'
