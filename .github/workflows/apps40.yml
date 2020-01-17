@@ -160,6 +160,7 @@ jobs:
           echo "Namespace $nameSpace does not exist. Creating $nameSpace namespace now."
 
           kubectl create namespace $nameSpace
+
           kubectl label namespace/$nameSpace purpose=prod-app
         fi
 
@@ -167,10 +168,10 @@ jobs:
         kubectl get sa -n $nameSpace | grep "ttsa"
         
         if [ $? -eq 0 ]; then
-            echo 'Service Account acr-auth already exists'
+            echo "Service Account ttsa already exists"
         else
-          echo 'Service account ttsa does not exist. Creating service account now.'
-
+          echo "Service account ttsa does not exist. Creating service account now."
+          
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
           kind: ServiceAccount
