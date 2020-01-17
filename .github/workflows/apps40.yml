@@ -257,11 +257,11 @@ jobs:
       
       - name: 'Label all pods for network policy'
         run: |
-          x=$(kubectl get pods -n twt -o=jsonpath='{range .items[*]}{"\n"}{.metadata.name}{"\t"}{end}' |sort)
-          for i in $x
-          do
-            kubectl label -n twt pods $i role=twt-app --overwrite true
-          done
+          # remove label if exist
+          kubectl label -n twt pods --all role-
+          
+          # add label  
+          kubectl label -n twt pods --all role=twt-app
 
       - name: 'Copy website images to storage'
         run: |
