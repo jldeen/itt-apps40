@@ -10,7 +10,7 @@ env:
   subName: "Ignite The Tour"
 
   # container info
-  containerRegistry: igniteappsacr40jd
+  containerRegistry: neilpeterson
   containerVersion: v2
 
   # tailwind deployment
