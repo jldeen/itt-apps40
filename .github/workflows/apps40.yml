@@ -279,7 +279,7 @@ jobs:
           # temp
           echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
 
-  deployApplication:
+  deployMicroservices:
     runs-on: self-hosted
     needs: buildImages
     steps:
@@ -290,7 +290,7 @@ jobs:
         run: |
           echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
           
-          AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+          AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
           INGRESS=$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
           pictures=$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)
