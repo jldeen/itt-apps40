@@ -207,6 +207,21 @@ jobs:
       run: |
         pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
   
+  buildImages:
+    runs-on: self-hosted
+    needs: deployInfra
+    steps:
+      - name: 'build cart.api'
+      - name: 'build product.api'
+      - name: 'build profile.api'
+      - name: 'login.api'
+      - name: 'coupon.api'
+      - name: 'popular-product.api'
+      - name: 'stock.api'
+      - name: 'image-classifier.api'
+      - name: 'mobileapigw'
+      - name: 'webapigw'
+
   deployApplication:
     runs-on: self-hosted
     needs: deployInfra
@@ -281,12 +296,13 @@ jobs:
         run: |
           git clone https://github.com/kedacore/keda.git
           git -C keda checkout 6ee8f18
-          helm install keda --namespace keda ./keda/chart/keda/ -f ./keda/chart/keda/values.yaml 
+
+          helm upgrade --install keda --namespace keda ./keda/chart/keda/ -f ./keda/chart/keda/values.yaml 
           
           # add stable repo for helm 3
           helm repo add stable http://storage.googleapis.com/kubernetes-charts
 
-          helm install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD stable/rabbitmq
+          helm upgrade --install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD stable/rabbitmq
 
           cat <<EOF | kubectl apply -f -
           apiVersion: apps/v1
