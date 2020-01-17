@@ -276,6 +276,9 @@ jobs:
 
           docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t $CONTAINER_REGISTRY/web:$GITHUB_SHA
 
+          # temp
+          echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
+
   deployApplication:
     runs-on: self-hosted
     needs: buildImages
