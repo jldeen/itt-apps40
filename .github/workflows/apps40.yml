@@ -90,17 +90,23 @@ jobs:
         az postgres server update --resource-group $resourceGroup --name $POSTGRES --ssl-enforcement Disabled
         az postgres server firewall-rule create --resource-group $resourceGroup --server-name $POSTGRES --name AllowAllAzureIps --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
     
-    - name: 'Install Helm on K8s Cluster'
-      run: |
-        AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
-        az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
+    # - name: 'Install Helm on K8s Cluster'
+    #   run: |
+    #     AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+    #     az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
         
-        # testing helm 3
-        # kubectl apply -f https://raw.githubusercontent.com/Azure/helm-charts/master/docs/prerequisities/helm-rbac-config.yaml
-        # helm init --wait --service-account tiller
+    #     # testing helm 3
+    #     # kubectl apply -f https://raw.githubusercontent.com/Azure/helm-charts/master/docs/prerequisities/helm-rbac-config.yaml
+    #     # helm init --wait --service-account tiller
     
     - name: 'Install Virtual Node on K8s cluster'
       run: |
+        # Capture Cluster Info in var
+        AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+
+        # get kube context
+        az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
+
         # Deploy virtual node 
         az aks enable-addons \
         --resource-group $resourceGroup  \
@@ -109,8 +115,9 @@ jobs:
         --subnet-name VNSubnet
 
     - name: 'Create k8s service account'
+      env:
+        nameSpace: twt
       run: |
-        nameSpace=twt
         kubectl create namespace $nameSpace
         kubectl label namespace/$nameSpace purpose=prod-app
 
