@@ -191,7 +191,7 @@ jobs:
     runs-on: self-hosted
     needs: deployInfra
     steps:
-      - name: 'deploy k8s app'
+      - name: 'deploy k8s helm charts'
         run: |
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
@@ -199,23 +199,39 @@ jobs:
           pictures=$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)
 
           # twt login
-          helm install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/login.api --set image.tag=$containerVersion --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
+          helm upgrade --install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/login.api --set image.tag=$containerVersion --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
 
           # twt product
-          helm install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/product.api --set image.tag=$containerVersion --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail $tailwindCharts/products-api --set az.productvisitsurl=http://your-product-visits-af-here
+          helm upgrade --install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/product.api --set image.tag=$containerVersion --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail $tailwindCharts/products-api --set az.productvisitsurl=http://your-product-visits-af-here
 
           # twt coupon
-          helm install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/coupon.api --set image.tag=$containerVersion --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
-          helm install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/profile.api --set image.tag=$containerVersion --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
-          helm install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/popular-product.api --set image.tag=$containerVersion --set initImage.repository=$containerRegistry/popular-product-seed.api --set initImage.tag=latest --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
-          helm install my-tt-stock -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/stock.api --set image.tag=$containerVersion $tailwindCharts/stock-api
-          helm install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/image-classifier.api --set image.tag=$containerVersion $tailwindCharts/image-classifier-api
-          helm install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/cart.api --set image.tag=$containerVersion $tailwindCharts/cart-api
-          helm install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/mobileapigw --set image.tag=$containerVersion --set probes.readiness=null $tailwindCharts/mobilebff
-          helm install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/webapigw --set image.tag=$containerVersion $tailwindCharts/webbff
+          helm upgrade --install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/coupon.api --set image.tag=$containerVersion --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
+
+          # twt profile
+          helm upgrade --install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/profile.api --set image.tag=$containerVersion --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
+
+          # twt popular product
+          helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/popular-product.api --set image.tag=$containerVersion --set initImage.repository=$containerRegistry/popular-product-seed.api --set initImage.tag=latest --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
+
+          # twt stock
+          helm upgrade --install my-tt-stock -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/stock.api --set image.tag=$containerVersion $tailwindCharts/stock-api
+
+          # twt image classifier
+          helm upgrade --install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/image-classifier.api --set image.tag=$containerVersion $tailwindCharts/image-classifier-api
+
+          # twt cart
+          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/cart.api --set image.tag=$containerVersion $tailwindCharts/cart-api
+
+          # twt mobile bff
+          helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/mobileapigw --set image.tag=$containerVersion --set probes.readiness=null $tailwindCharts/mobilebff
+
+          # twt web bff
+          helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/webapigw --set image.tag=$containerVersion $tailwindCharts/webbff
 
           git clone https://github.com/neilpeterson/TailwindTraders-Website.git
-          helm install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/web --set image.tag=v1 TailwindTraders-Website/Deploy/helm/web/
+
+          # twt web
+          helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/web --set image.tag=v1 TailwindTraders-Website/Deploy/helm/web/
       
       - name: 'Label all pods for network policy'
         run: |
