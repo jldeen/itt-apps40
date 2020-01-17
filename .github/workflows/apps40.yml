@@ -25,174 +25,153 @@ env:
   sqlServerUser: sqladmin
 
 jobs:
-  # uploadIaC:
+  # deployInfra:
   #   runs-on: self-hosted
   #   steps:
-  #   # checkout code from repo
-  #   - name: checkout repo
-  #     uses: actions/checkout@v1
-  #   # upload IaC folder
-  #   - name: upload IaC
-  #     uses: actions/upload-artifact@master
+  #   # checkout branch
+  #   - name: git checkout master branch 
+  #     uses: actions/checkout@master
+
+  #   # log into Azure
+  #   - name: 'Login via Azure CLI'
+  #     uses: azure/login@v1
   #     with:
-  #       name: IaC
-  #       path: IaC
-  deployInfra:
-    runs-on: self-hosted
-    steps:
-    # checkout branch
-    - name: git checkout master branch 
-      uses: actions/checkout@master
-
-    # log into Azure
-    - name: 'Login via Azure CLI'
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    # create resource group
-    - name: 'Create Resource Group'
-      run: |
-        az group create --subscription "$subName" --name $resourceGroup --location $location --tags ITT-Tracking=$SESSION_CODE CreatedBy=$USER_ID
+  #       creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #   # create resource group
+  #   - name: 'Create Resource Group'
+  #     run: |
+  #       az group create --subscription "$subName" --name $resourceGroup --location $location --tags ITT-Tracking=$SESSION_CODE CreatedBy=$USER_ID
     
-    # create VNet
-    - name: 'Create Virtual Network'
-      run: |
-        # run check for idempotent pipeline
+  #   # create VNet
+  #   - name: 'Create Virtual Network'
+  #     run: |
+  #       # run check for idempotent pipeline
 
-        kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
+  #       kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
 
-        if [ $? -eq 0 ]; then
-            echo 'Virtual network already exists'
-        else
-          echo 'Virtual network does not exist. Creating virtual network now.'
+  #       if [ $? -eq 0 ]; then
+  #           echo 'Virtual network already exists'
+  #       else
+  #         echo 'Virtual network does not exist. Creating virtual network now.'
 
-          # create vnet
-          az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
-        fi
+  #         # create vnet
+  #         az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
+  #       fi
 
-    # create virtual node subnet
-    - name: 'Create Virtual Node Subnet'
-      run: |
-        # run check for idempotent pipeline
+  #   # create virtual node subnet
+  #   - name: 'Create Virtual Node Subnet'
+  #     run: |
+  #       # run check for idempotent pipeline
         
-        kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
+  #       kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
 
-        if [ $? -eq 0 ]; then
-            echo 'Virtual node subnet already exists'
-        else
-          echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
+  #       if [ $? -eq 0 ]; then
+  #           echo 'Virtual node subnet already exists'
+  #       else
+  #         echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
 
-          # configure vnet subnet
-          az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
-        fi
+  #         # configure vnet subnet
+  #         az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
+  #       fi
     
-    # Deploy backend infrastructure
-    - name: 'Setup Backend Infra'
-      env:
-        azureClientID: e13daae5-2cb2-4df1-ab7d-7dbe139e3e95
-      run: |
-        vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
+  #   # Deploy backend infrastructure
+  #   - name: 'Setup Backend Infra'
+  #     env:
+  #       azureClientID: e13daae5-2cb2-4df1-ab7d-7dbe139e3e95
+  #     run: |
+  #       vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
 
-        az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
-          --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
-          sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
-          aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
+  #       az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
+  #         --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
+  #         sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
+  #         aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
 
-    # Application Insights (using preview extension)
-    - name: 'Create Application Insights'
-      run: |
-        az extension add -n application-insights
-        instrumentationKey=$(az monitor app-insights component show --app tt-app-insights --resource-group $resourceGroup --query instrumentationKey -o tsv)
+  #   # Application Insights (using preview extension)
+  #   - name: 'Create Application Insights'
+  #     run: |
+  #       az extension add -n application-insights
+  #       instrumentationKey=$(az monitor app-insights component show --app tt-app-insights --resource-group $resourceGroup --query instrumentationKey -o tsv)
 
-    # create postgres DB, Disable SSL, and set Firewall  
-    - name: 'Create postgres DB, Disable SSL and set firewall'
-      run: |
-        POSTGRES=$(az postgres server list --resource-group $resourceGroup --query [0].name -o tsv)
-        az postgres db create -g $resourceGroup -s $POSTGRES -n stockdb
-        az postgres server update --resource-group $resourceGroup --name $POSTGRES --ssl-enforcement Disabled
-        az postgres server firewall-rule create --resource-group $resourceGroup --server-name $POSTGRES --name AllowAllAzureIps --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+  #   # create postgres DB, Disable SSL, and set Firewall  
+  #   - name: 'Create postgres DB, Disable SSL and set firewall'
+  #     run: |
+  #       POSTGRES=$(az postgres server list --resource-group $resourceGroup --query [0].name -o tsv)
+  #       az postgres db create -g $resourceGroup -s $POSTGRES -n stockdb
+  #       az postgres server update --resource-group $resourceGroup --name $POSTGRES --ssl-enforcement Disabled
+  #       az postgres server firewall-rule create --resource-group $resourceGroup --server-name $POSTGRES --name AllowAllAzureIps --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
     
-    # - name: 'Install Helm on K8s Cluster'
-    #   run: |
-    #     AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
-    #     az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
+  #   - name: 'Install Virtual Node on K8s cluster'
+  #     run: |
+  #       # Capture Cluster Info in var
+  #       AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+
+  #       # get kube context
+  #       rm -rf ~/.kube/config
+  #       az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
         
-    #     # testing helm 3
-    #     # kubectl apply -f https://raw.githubusercontent.com/Azure/helm-charts/master/docs/prerequisities/helm-rbac-config.yaml
-    #     # helm init --wait --service-account tiller
-    
-    - name: 'Install Virtual Node on K8s cluster'
-      run: |
-        # Capture Cluster Info in var
-        AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
-
-        # get kube context
-        rm -rf ~/.kube/config
-        az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
+  #       # run check for idempotent pipeline
         
-        # run check for idempotent pipeline
-        
-        kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
+  #       kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
 
-        if [ $? -eq 0 ]; then
-            echo 'Virtual node already exists'
-        else
-          echo 'Virtual node does not exist. Creating virtual now.'
+  #       if [ $? -eq 0 ]; then
+  #           echo 'Virtual node already exists'
+  #       else
+  #         echo 'Virtual node does not exist. Creating virtual now.'
 
-          # Deploy virtual node 
-          az aks enable-addons \
-          --resource-group $resourceGroup  \
-          --name $AKS_CLUSTER \
-          --addons virtual-node \
-          --subnet-name VNSubnet
-        fi
+  #         # Deploy virtual node 
+  #         az aks enable-addons \
+  #         --resource-group $resourceGroup  \
+  #         --name $AKS_CLUSTER \
+  #         --addons virtual-node \
+  #         --subnet-name VNSubnet
+  #       fi
 
-    - name: 'Create k8s twt namespace'
-      env:
-        nameSpace: twt
-      run: |
-        # twt namespace
-        kubectl get ns | grep $nameSpace > /dev/null
+  #   - name: 'Create k8s twt namespace'
+  #     env:
+  #       nameSpace: twt
+  #     run: |
+  #       # twt namespace
+  #       kubectl get ns | grep $nameSpace > /dev/null
 
-        if [ $? -eq 0 ]; then
-            echo "Namespace $nameSpace already exists."
-        else
-          echo "Namespace $nameSpace does not exist. Creating $nameSpace namespace now."
+  #       if [ $? -eq 0 ]; then
+  #           echo "Namespace $nameSpace already exists."
+  #       else
+  #         echo "Namespace $nameSpace does not exist. Creating $nameSpace namespace now."
 
-          kubectl create namespace $nameSpace
+  #         kubectl create namespace $nameSpace
 
-          kubectl label namespace/$nameSpace purpose=prod-app
-        fi
+  #         kubectl label namespace/$nameSpace purpose=prod-app
+  #       fi
 
-    - name: 'Create keda namespace'
-      env:
-        nameSpace: twt
-      run: |
-        # keda namespace
-        kubectl get ns | grep keda > /dev/null
+  #   - name: 'Create keda namespace'
+  #     env:
+  #       nameSpace: twt
+  #     run: |
+  #       # keda namespace
+  #       kubectl get ns | grep keda > /dev/null
 
-        if [ $? -eq 0 ]; then
-            echo "Namespace keda already exists."
-        else
-          echo "Namespace keda does not exist. Creating keda namespace now."
+  #       if [ $? -eq 0 ]; then
+  #           echo "Namespace keda already exists."
+  #       else
+  #         echo "Namespace keda does not exist. Creating keda namespace now."
 
-          kubectl create namespace keda
+  #         kubectl create namespace keda
 
-        fi
+  #       fi
 
-    - name: 'Create k8s service account'
-      env:
-        nameSpace: twt
-      run: |
-        cat <<EOF | kubectl apply -f -
-        apiVersion: v1
-        kind: ServiceAccount
-        imagePullSecrets:
-        - name: acr-auth
-        metadata:
-          name: ttsa
-          namespace: $nameSpace
-        EOF
+  #   - name: 'Create k8s service account'
+  #     env:
+  #       nameSpace: twt
+  #     run: |
+  #       cat <<EOF | kubectl apply -f -
+  #       apiVersion: v1
+  #       kind: ServiceAccount
+  #       imagePullSecrets:
+  #       - name: acr-auth
+  #       metadata:
+  #         name: ttsa
+  #         namespace: $nameSpace
+  #       EOF
   
   buildImages:
     runs-on: self-hosted
@@ -213,8 +192,8 @@ jobs:
         run: |
           echo "Retrieving Container Registry info..."
           CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
-          REGISTRY_USERNAME=$(az acr credential show -n $acrName --query username -o tsv)
-          REGISTRY_PASSWORD=$(az acr credential show -n $acrName -o tsv --query passwords[0].value)
+          REGISTRY_USERNAME=$(az acr credential show -n $CONTAINER_REGISTRY --query username -o tsv)
+          REGISTRY_PASSWORD=$(az acr credential show -n $CONTAINER_REGISTRY -o tsv --query passwords[0].value)
 
       # docker login
       - name: 'build/push cart.api'
