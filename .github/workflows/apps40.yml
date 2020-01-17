@@ -192,6 +192,8 @@ jobs:
     needs: deployInfra
     steps:
       - name: 'deploy k8s helm charts'
+        env:
+          nameSpace: twt
         run: |
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
@@ -220,7 +222,7 @@ jobs:
           helm upgrade --install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/image-classifier.api --set image.tag=$containerVersion $tailwindCharts/image-classifier-api
 
           # twt cart
-          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/cart.api --set image.tag=$containerVersion $tailwindCharts/cart-api
+          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/cart.api --set image.tag=$containerVersion $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
 
           # twt mobile bff
           helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/mobileapigw --set image.tag=$containerVersion --set probes.readiness=null $tailwindCharts/mobilebff
