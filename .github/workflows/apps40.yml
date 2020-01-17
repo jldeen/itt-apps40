@@ -10,8 +10,8 @@ env:
   subName: "Ignite The Tour"
 
   # container info
-  acrName: igniteappsacr40jd
-  acrVersion: v2
+  containerRegistry: igniteappsacr40jd
+  containerVersion: v2
 
   # tailwind deployment
   tailwindInfrastructure: deployment.json
