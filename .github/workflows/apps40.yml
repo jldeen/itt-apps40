@@ -197,10 +197,6 @@ jobs:
   buildImages:
     runs-on: self-hosted
     needs: deployInfra
-    env:
-      CONTAINER_REGISTRY: $(az acr list -g $resourceGroup -o tsv --query "[0].name")
-      REGISTRY_USERNAME: $(az acr credential show -n $acrName --query username -o tsv)
-      REGISTRY_PASSWORD: $(az acr credential show -n $acrName -o tsv --query passwords[0].value)
     steps:
       - name: 'Checkout TailwindTraders Backend Source'
         run: |
@@ -213,13 +209,13 @@ jobs:
         run: |
           pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
 
-      # - name: 'Get ACR Container Information'
-      #   run: |
-      #     echo "Retrieving Container Registry info..."
-      #     CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
-      #     REGISTRY_USERNAME=$(az acr credential show -n $acrName --query username -o tsv)
-      #     REGISTRY_PASSWORD=$(az acr credential show -n $acrName -o tsv --query passwords[0].value)
-      
+      - name: 'Get ACR Container Information'
+        run: |
+          echo "Retrieving Container Registry info..."
+          CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
+          REGISTRY_USERNAME=$(az acr credential show -n $acrName --query username -o tsv)
+          REGISTRY_PASSWORD=$(az acr credential show -n $acrName -o tsv --query passwords[0].value)
+
       # docker login
       - name: 'build/push cart.api'
         uses: greenie-msft/container-actions/docker-login@master
