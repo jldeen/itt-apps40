@@ -239,7 +239,6 @@ jobs:
           #docker push
 
       - name: 'popular-product.api'
-        with:
         run: |
           docker build -f ${{ env.dPath }}/Services/Tailwind.Traders.PopularProduct.Api/Dockerfile . -t $CONTAINER_REGISTRY/popular-product.api:$GITHUB_SHA
 
