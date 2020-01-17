@@ -151,18 +151,6 @@ jobs:
       env:
         nameSpace: twt
       run: |
-        function create_sa () {
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: ServiceAccount
-          imagePullSecrets:
-          - name: acr-auth
-          metadata:
-            name: ttsa
-            namespace: $nameSpace
-          EOF
-        }
-
         # namespace
         kubectl get ns | grep $nameSpace
 
