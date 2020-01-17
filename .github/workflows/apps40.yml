@@ -217,19 +217,19 @@ jobs:
 
       - name: 'build/push product.api'
         run: |
-          docker build -f Dockerfile $dPath/Services/Tailwind.Traders.Product.Api/ -t $CONTAINER_REGISTRY/product.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.Product.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/product.api:$GITHUB_SHA
 
           #docker push
 
       - name: 'build/push profile.api'
         run: |
-          docker build -f Dockerfile $dPath/Services/Tailwind.Traders.Profile.Api/ -t $CONTAINER_REGISTRY/profile.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.Profile.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/profile.api:$GITHUB_SHA
 
           #docker push
 
       - name: 'build/push login.api'
         run: |
-          docker build -f Dockerfile $dPath/Services/Tailwind.Traders.Login.Api/ -t $CONTAINER_REGISTRY/login.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.Login.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/login.api:$GITHUB_SHA
 
           #docker push
 
@@ -241,7 +241,7 @@ jobs:
 
       - name: 'build/push popular-product.api'
         run: |
-          docker build -f Dockerfile $dPath/Services/Tailwind.Traders.PopularProduct.Api/ -t $CONTAINER_REGISTRY/popular-product.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.PopularProduct.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/popular-product.api:$GITHUB_SHA
 
           #docker push
           
@@ -253,19 +253,19 @@ jobs:
 
       - name: 'build/push image-classifier.api'
         run: |
-          docker build -f Dockerfile $dPath/Services/Tailwind.Traders.ImageClassifier.Api/ -t $CONTAINER_REGISTRY/image-classifier.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.ImageClassifier.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/image-classifier.api:$GITHUB_SHA
 
           #docker push
 
       - name: 'build/push mobileapigw'
         run: |
-          docker build -f Dockerfile $dPath/ApiGWs/Tailwind.Traders.Bff/ -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
+          docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
           #docker push
 
       - name: 'build/push webapigw'
         run: |
-          docker build $dPath/ApiGWs/Tailwind.Traders.WebBff/ -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
+          docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
 
           #docker push
       
