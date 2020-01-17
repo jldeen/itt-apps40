@@ -293,7 +293,7 @@ jobs:
           # persist env vars
           echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
           echo "::set-env name=INGRESS::$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)"
-
+          echo "::set-env name=CONTAINER_REGISTRY::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
           echo "::set-env name=pictures::$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)"
 
           git -C TailwindTraders-Backend checkout ed86d5f
@@ -301,47 +301,47 @@ jobs:
       - name: 'helm install login api'
         run: |
           # twt login
-          helm upgrade --install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/login.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
+          helm upgrade --install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/login.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
       
       - name: 'helm install product api'
         run: |
           # twt product
-          helm upgrade --install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/product.api --set image.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail $tailwindCharts/products-api --set az.productvisitsurl=http://your-product-visits-af-here
+          helm upgrade --install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/product.api --set image.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail $tailwindCharts/products-api --set az.productvisitsurl=http://your-product-visits-af-here
 
       - name: 'helm install coupon api'
         run: |
           # twt coupon
-          helm upgrade --install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/coupon.api --set image.tag=$GITHUB_SHA --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
+          helm upgrade --install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/coupon.api --set image.tag=$GITHUB_SHA --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
       
       - name: 'helm install profile api'
         run: |
           # twt profile
-          helm upgrade --install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/profile.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
+          helm upgrade --install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/profile.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
 
       - name: 'helm install popular product api'
         run: |
           # twt popular product
-          helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/popular-product.api --set image.tag=$GITHUB_SHA --set initImage.repository=$containerRegistry/popular-product-seed.api --set initImage.tag=latest --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
+          helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/popular-product.api --set image.tag=$GITHUB_SHA --set initImage.repository=$containerRegistry/popular-product-seed.api --set initImage.tag=latest --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
 
       - name: 'helm install stock api'
         run: |
           # twt stock
-          helm upgrade --install my-tt-stock -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/stock.api --set image.tag=$GITHUB_SHA $tailwindCharts/stock-api
+          helm upgrade --install my-tt-stock -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/stock.api --set image.tag=$GITHUB_SHA $tailwindCharts/stock-api
 
       - name: 'helm install image classifier api'
         run: |
           # twt image classifier
-          helm upgrade --install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/image-classifier.api --set image.tag=$GITHUB_SHA $tailwindCharts/image-classifier-api
+          helm upgrade --install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/image-classifier.api --set image.tag=$GITHUB_SHA $tailwindCharts/image-classifier-api
 
       - name: 'helm install cart api'
         run: |
           # twt cart
-          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/cart.api --set image.tag=$GITHUB_SHA $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none --set B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
+          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/cart.api --set image.tag=$GITHUB_SHA $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none --set B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
 
       - name: 'helm install mobile bff api'
         run: |
           # twt mobile bff
-          helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/mobileapigw --set image.tag=$GITHUB_SHA --set probes.readiness=null $tailwindCharts/mobilebff
+          helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINTER_REGISTRY/mobileapigw --set image.tag=$GITHUB_SHA --set probes.readiness=null $tailwindCharts/mobilebff
 
       - name: 'helm install web bff api'
         run: |
