@@ -147,7 +147,7 @@ jobs:
           --subnet-name VNSubnet
         fi
 
-    - name: 'Create k8s service account'
+    - name: 'Create k8s twt namespace'
       env:
         nameSpace: twt
       run: |
@@ -164,6 +164,10 @@ jobs:
           kubectl label namespace/$nameSpace purpose=prod-app
         fi
 
+    - name: 'Create keda namespace'
+      env:
+        nameSpace: twt
+      run: |
         # keda namespace
         kubectl get ns | grep keda > /dev/null
 
@@ -176,6 +180,10 @@ jobs:
 
         fi
 
+    - name: 'Create k8s service account'
+      env:
+        nameSpace: twt
+      run: |
         cat <<EOF | kubectl apply -f -
         apiVersion: v1
         kind: ServiceAccount
@@ -186,7 +194,7 @@ jobs:
           namespace: $nameSpace
         EOF
 
-    - name: 'Checkout TailwindTraders Backend'
+    - name: 'Checkout TailwindTraders Backend IaC'
       run: |
         # clean-up local
         rm -rf TailwindTraders-Backend
@@ -195,7 +203,7 @@ jobs:
         git clone https://github.com/microsoft/TailwindTraders-Backend.git
 
         git -C TailwindTraders-Backend checkout ed86d5f                    
-    - name: 'Create Helm values file'
+    - name: 'Create Helm gvalues file'
       run: |
         pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
   
@@ -252,7 +260,7 @@ jobs:
           x=$(kubectl get pods -n twt -o=jsonpath='{range .items[*]}{"\n"}{.metadata.name}{"\t"}{end}' |sort)
           for i in $x
           do
-            kubectl label -n twt pods $i role=twt-app
+            kubectl label -n twt pods $i role=twt-app --overwrite true
           done
 
       - name: 'Copy website images to storage'
