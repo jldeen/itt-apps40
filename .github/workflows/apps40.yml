@@ -180,6 +180,7 @@ jobs:
       - name: 'Checkout TailwindTraders Backend Source'
         run: |
           # fresh download
+          rm -rf TailwindTraders-Backend
           git clone https://github.com/microsoft/TailwindTraders-Backend.git
 
           #git -C TailwindTraders-Backend checkout ed86d5f  
@@ -191,9 +192,9 @@ jobs:
       - name: 'Get ACR Container Information'
         run: |
           echo "Retrieving Container Registry info..."
-          CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
-          REGISTRY_USERNAME=$(az acr credential show -n $CONTAINER_REGISTRY --query username -o tsv)
-          REGISTRY_PASSWORD=$(az acr credential show -n $CONTAINER_REGISTRY -o tsv --query passwords[0].value)
+          export CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
+          export REGISTRY_USERNAME=$(az acr credential show -n $CONTAINER_REGISTRY --query username -o tsv)
+          export REGISTRY_PASSWORD=$(az acr credential show -n $CONTAINER_REGISTRY -o tsv --query passwords[0].value)
 
       # docker login
       - name: 'build/push cart.api'
