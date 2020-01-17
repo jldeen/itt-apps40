@@ -151,22 +151,25 @@ jobs:
       env:
         nameSpace: twt
       run: |
+        # namespace
         kubectl get ns | grep $nameSpace
 
         if [ $? -eq 0 ]; then
-            echo 'Namespace $nameSpace already exists'
+            echo "Namespace $nameSpace already exists."
         else
-          echo 'Namespace $nameSpace does not exist. Creating $nameSpace namespace now.'
+          echo "Namespace $nameSpace does not exist. Creating $nameSpace namespace now."
+
           kubectl create namespace $nameSpace
           kubectl label namespace/$nameSpace purpose=prod-app
         fi
 
-        kubectl get sa -n $nameSpace | grep "acr-auth"
+        # service account
+        kubectl get sa -n $nameSpace | grep "ttsa"
         
         if [ $? -eq 0 ]; then
             echo 'Service Account acr-auth already exists'
         else
-          echo 'Service account acr-auth does not exist. Creating service account now.'
+          echo 'Service account ttsa does not exist. Creating service account now.'
 
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
@@ -177,7 +180,6 @@ jobs:
             name: ttsa
             namespace: $nameSpace
           EOF
-
         fi
 
     - name: 'Checkout TailwindTraders Backend'
