@@ -186,34 +186,6 @@ jobs:
     - name: 'Create Helm values file'
       run: |
         pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
-
-  # buildApplication:
-  #   runs-on: self-hosted
-  #   needs: deployInfra
-  #   steps:
-    
-  #   # checkout branch
-  #   - uses: actions/checkout@master
-
-  #   # log into Azure
-  #   - name: 'Login via Azure CLI'
-  #     uses: azure/login@v1
-  #     with:
-  #       creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-  #   # docker login
-  #   - name: 'Docker Login'
-  #     uses: greenie-msft/container-actions/docker-login@master
-  #     with:
-  #       login-server: ${{ secrets.CONTAINER_REGISTRY }}
-  #       username: ${{ secrets.REGISTRY_USERNAME }}
-  #       password: ${{ secrets.REGISTRY_PASSWORD }}
-    
-  #   # build/push docker image
-  #   - name: 'build/push'
-  #     run: |
-  #       docker build Source/Tailwind.Traders.Web/ -t ${{ secrets.CONTAINER_REGISTRY }}/$webappName:$GITHUB_SHA
-  #       docker push ${{ secrets.CONTAINER_REGISTRY }}/$webappName:$GITHUB_SHA
   
   deployApplication:
     runs-on: self-hosted
@@ -226,8 +198,13 @@ jobs:
           INGRESS=$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
           pictures=$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)
 
+          # twt login
           helm install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/login.api --set image.tag=$containerVersion --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
-          helm install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/product.api --set image.tag=$containerVersion --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail $tailwindCharts/products-api
+
+          # twt product
+          helm install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/product.api --set image.tag=$containerVersion --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail $tailwindCharts/products-api --set az.productvisitsurl=http://your-product-visits-af-here
+
+          # twt coupon
           helm install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/coupon.api --set image.tag=$containerVersion --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
           helm install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/profile.api --set image.tag=$containerVersion --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
           helm install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$containerRegistry/popular-product.api --set image.tag=$containerVersion --set initImage.repository=$containerRegistry/popular-product-seed.api --set initImage.tag=latest --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
