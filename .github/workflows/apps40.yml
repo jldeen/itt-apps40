@@ -294,14 +294,20 @@ jobs:
 
       - name: 'Setup scaling backend components'
         run: |
-          git clone https://github.com/kedacore/keda.git
-          git -C keda checkout 6ee8f18
-
-          helm upgrade --install keda --namespace keda ./keda/chart/keda/ -f ./keda/chart/keda/values.yaml 
+          # add kedacore repo
+          helm repo add kedacore https://kedacore.github.io/charts
+ 
           
           # add stable repo for helm 3
           helm repo add stable http://storage.googleapis.com/kubernetes-charts
 
+          # repo update
+          helm repo update
+
+          # keda install
+          helm upgrade --install keda kedacore/keda --namespace keda
+
+          # rabbitmq install
           helm upgrade --install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD stable/rabbitmq
 
           cat <<EOF | kubectl apply -f -
@@ -360,6 +366,7 @@ jobs:
                 host: 'amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672'
                 queueLength  : '5'
           EOF
+          
       - name: 'Notes'
         run: |
           echo "*************** Connection Information ***************"
