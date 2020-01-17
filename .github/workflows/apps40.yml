@@ -193,40 +193,86 @@ jobs:
           name: ttsa
           namespace: $nameSpace
         EOF
-
-    - name: 'Checkout TailwindTraders Backend IaC'
-      run: |
-        # clean-up local
-        rm -rf TailwindTraders-Backend
-
-        # fresh download
-        git clone https://github.com/microsoft/TailwindTraders-Backend.git
-
-        git -C TailwindTraders-Backend checkout ed86d5f                    
-    - name: 'Create Helm gvalues file'
-      run: |
-        pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
   
-  # buildImages:
-  #   runs-on: self-hosted
-  #   needs: deployInfra
-  #   steps:
-  #     - name: 'build cart.api'
-  #     - name: 'build product.api'
-  #     - name: 'build profile.api'
-  #     - name: 'login.api'
-  #     - name: 'coupon.api'
-  #     - name: 'popular-product.api'
-  #     - name: 'stock.api'
-  #     - name: 'image-classifier.api'
-  #     - name: 'mobileapigw'
-  #     - name: 'webapigw'
-
-  deployApplication:
+  buildImages:
     runs-on: self-hosted
     needs: deployInfra
     steps:
+      - name: 'Checkout TailwindTraders Backend Source'
+        run: |
+          # fresh download
+          git clone https://github.com/microsoft/TailwindTraders-Backend.git
+
+          git -C TailwindTraders-Backend checkout ed86d5f  
+
+      - name: 'Create Helm gvalues file'
+        run: |
+          pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
+      
+      # # docker login
+      # - name: 'Docker Login'
+      #   uses: greenie-msft/container-actions/docker-login@master
+      #   with:
+      #     login-server: ${{ secrets.CONTAINER_REGISTRY }}
+      #     username: ${{ secrets.REGISTRY_USERNAME }}
+      #     password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      # - name: 'build cart.api'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'build product.api'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'build profile.api'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'login.api'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'coupon.api'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'popular-product.api'
+      #   run: |
+      #     docker build
+      #     docker push
+          
+      # - name: 'stock.api'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'image-classifier.api'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'mobileapigw'
+      #   run: |
+      #     docker build
+      #     docker push
+
+      # - name: 'webapigw'
+      #   run: |
+      #     docker build
+      #     docker push
+
+  deployApplication:
+    runs-on: self-hosted
+    needs: buildImages
+    steps:
       - name: 'deploy k8s helm charts'
+        # TODO: need to break out into individual steps for each api
         env:
           nameSpace: twt
         run: |
@@ -369,7 +415,7 @@ jobs:
 
       - name: 'Notes'
         run: |
-          INGRESS=$(az aks show -n $AKS_CLUSTER -g $azureResourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
+          INGRESS=$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
           
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
           
