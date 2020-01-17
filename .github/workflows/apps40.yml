@@ -41,7 +41,8 @@ jobs:
     runs-on: self-hosted
     steps:
     # checkout branch
-    - uses: actions/checkout@master
+    - name: git checkout master branch 
+      uses: actions/checkout@master
 
     # log into Azure
     - name: 'Login via Azure CLI'
@@ -93,8 +94,10 @@ jobs:
       run: |
         AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
         az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
-        kubectl apply -f https://raw.githubusercontent.com/Azure/helm-charts/master/docs/prerequisities/helm-rbac-config.yaml
-        helm init --wait --service-account tiller
+        
+        # testing helm 3
+        # kubectl apply -f https://raw.githubusercontent.com/Azure/helm-charts/master/docs/prerequisities/helm-rbac-config.yaml
+        # helm init --wait --service-account tiller
     
     - name: 'Install Virtual Node on K8s cluster'
       run: |
