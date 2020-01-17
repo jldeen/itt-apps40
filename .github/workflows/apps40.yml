@@ -282,7 +282,9 @@ jobs:
           git clone https://github.com/kedacore/keda.git
           git -C keda checkout 6ee8f18
           helm install keda --namespace keda ./keda/chart/keda/ -f ./keda/chart/keda/values.yaml 
-
+          
+          # add stable repo for helm 3
+          helm repo add stable http://storage.googleapis.com/kubernetes-charts
 
           helm install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD stable/rabbitmq
 
