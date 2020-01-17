@@ -175,7 +175,7 @@ jobs:
   
   buildImages:
     runs-on: self-hosted
-    needs: deployInfra
+    # needs: deployInfra
     steps:
       - name: 'Checkout TailwindTraders Backend Source'
         run: |
