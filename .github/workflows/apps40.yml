@@ -151,21 +151,41 @@ jobs:
       env:
         nameSpace: twt
       run: |
-        kubectl create namespace $nameSpace
-        kubectl label namespace/$nameSpace purpose=prod-app
+        kubectl get ns | grep $nameSpace
 
-        cat <<EOF | kubectl apply -f -
-        apiVersion: v1
-        kind: ServiceAccount
-        imagePullSecrets:
-        - name: acr-auth
-        metadata:
-          name: ttsa
-          namespace: $nameSpace
-        EOF
+        if [ $? -eq 0 ]; then
+            echo 'Namespace $nameSpace already exists'
+        else
+          echo 'Namespace $nameSpace does not exist. Creating $nameSpace namespace now.'
+          kubectl create namespace $nameSpace
+          kubectl label namespace/$nameSpace purpose=prod-app
+        fi
+
+        kubectl get sa -n $nameSpace | grep "acr-auth"
+        
+        if [ $? -eq 0 ]; then
+            echo 'Service Account acr-auth already exists'
+        else
+          echo 'Service account acr-auth does not exist. Creating service account now.'
+
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: ServiceAccount
+          imagePullSecrets:
+          - name: acr-auth
+          metadata:
+            name: ttsa
+            namespace: $nameSpace
+          EOF
+
+        fi
 
     - name: 'Checkout TailwindTraders Backend'
       run: |
+        # clean-up local
+        rm -rf TailwindTraders-Backend
+
+        # fresh download
         git clone https://github.com/microsoft/TailwindTraders-Backend.git
 
         git -C TailwindTraders-Backend checkout ed86d5f                    
