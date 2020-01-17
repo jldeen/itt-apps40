@@ -58,7 +58,7 @@ jobs:
     - name: 'Create Virtual Network'
       run: |
         # run check for idempotent pipeline
-        
+
         kubectl get nodes | grep "virtual-node-aci-linux"
 
         if [ $? -eq 0 ]; then
@@ -73,8 +73,18 @@ jobs:
     # create virtual node subnet
     - name: 'Create Virtual Node Subnet'
       run: |
-        # configure vnet subnet
-        az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
+        # run check for idempotent pipeline
+        
+        kubectl get nodes | grep "virtual-node-aci-linux"
+
+        if [ $? -eq 0 ]; then
+            echo 'Virtual node subnet already exists'
+        else
+          echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
+
+          # configure vnet subnet
+          az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
+        fi
     
     # Deploy backend infrastructure
     - name: 'Setup Backend Infra'
