@@ -129,13 +129,23 @@ jobs:
         # get kube context
         rm -rf ~/.kube/config
         az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
+        
+        # run check for idempotent pipeline
+        
+        kubectl get nodes | grep "virtual-node-aci-linux"
 
-        # Deploy virtual node 
-        az aks enable-addons \
-        --resource-group $resourceGroup  \
-        --name $AKS_CLUSTER \
-        --addons virtual-node \
-        --subnet-name VNSubnet
+        if [ $? -eq 0 ]; then
+            echo 'Virtual node already exists'
+        else
+          echo 'Virtual node does not exist. Creating virtual now.'
+
+          # Deploy virtual node 
+          az aks enable-addons \
+          --resource-group $resourceGroup  \
+          --name $AKS_CLUSTER \
+          --addons virtual-node \
+          --subnet-name VNSubnet
+        fi
 
     - name: 'Create k8s service account'
       env:
