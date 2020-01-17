@@ -17,7 +17,7 @@ env:
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: helm-values/generate-config.ps1
-  tailwindChartValues: /values.yaml
+  tailwindChartValues: values.yaml
   tailwindWebImages: TailwindTraders-Backend/Deploy/tt-images
   tailwindServiceAccount: TailwindTraders-Backend/Deploy/helm/ttsa.yaml
 
@@ -130,7 +130,11 @@ jobs:
           name: ttsa
           namespace: $nameSpace
         EOF
+    - name: 'Checkout TailwindTraders Backend'
+      run: |
+        git clone https://github.com/microsoft/TailwindTraders-Backend.git
 
+        git -C TailwindTraders-Backend checkout ed86d5f                    
     - name: 'Create Helm values file'
       run: |
         pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
