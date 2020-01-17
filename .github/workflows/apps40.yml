@@ -62,7 +62,16 @@ jobs:
     # create virtual node subnet
     - name: 'Create Virtual Node Subnet'
       run: |
-        az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
+        # run check for idempotent pipeline
+        kubectl get nodes | grep "virtual-node-aci-linux"
+        if [ $? -eq 0 ]; then
+            echo 'Virtual node subnet already exists'
+        else
+            echo 'Virtual node subnet does not exists. Configuring now.'
+
+            # configure vnet subnet
+            az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
+        fi
     
     # Deploy backend infrastructure
     - name: 'Setup Backend Infra'
@@ -176,7 +185,7 @@ jobs:
       - name: 'deploy k8s app'
         run: |
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
-          
+
           INGRESS=$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
           pictures=$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)
 
