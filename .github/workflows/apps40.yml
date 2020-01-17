@@ -197,82 +197,123 @@ jobs:
   buildImages:
     runs-on: self-hosted
     needs: deployInfra
+    env:
+      CONTAINER_REGISTRY: $(az acr list -g $resourceGroup -o tsv --query "[0].name")
+      REGISTRY_USERNAME: $(az acr credential show -n $acrName --query username -o tsv)
+      REGISTRY_PASSWORD: $(az acr credential show -n $acrName -o tsv --query passwords[0].value)
     steps:
       - name: 'Checkout TailwindTraders Backend Source'
         run: |
           # fresh download
           git clone https://github.com/microsoft/TailwindTraders-Backend.git
 
-          git -C TailwindTraders-Backend checkout ed86d5f  
+          #git -C TailwindTraders-Backend checkout ed86d5f  
 
       - name: 'Create Helm gvalues file'
         run: |
           pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
+
+      # - name: 'Get ACR Container Information'
+      #   run: |
+      #     echo "Retrieving Container Registry info..."
+      #     CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
+      #     REGISTRY_USERNAME=$(az acr credential show -n $acrName --query username -o tsv)
+      #     REGISTRY_PASSWORD=$(az acr credential show -n $acrName -o tsv --query passwords[0].value)
       
-      # # docker login
-      # - name: 'Docker Login'
-      #   uses: greenie-msft/container-actions/docker-login@master
-      #   with:
-      #     login-server: ${{ secrets.CONTAINER_REGISTRY }}
-      #     username: ${{ secrets.REGISTRY_USERNAME }}
-      #     password: ${{ secrets.REGISTRY_PASSWORD }}
+      # docker login
+      - name: 'Docker Login'
+        uses: greenie-msft/container-actions/docker-login@master
+        with:
+          login-server: $CONTAINER_REGISTRY
+          username: $REGISTRY_USERNAME
+          password: $REGISTRY_PASSWORD
 
-      # - name: 'build cart.api'
-      #   run: |
-      #     docker build
-      #     docker push
+      - name: 'build cart.api'
+        with:
+          path: Source
+        run: |
+          docker build Services/Tailwind.Traders.Cart.Api/ -t $CONTAINER_REGISTRY/cart.api:$GITHUB_SHA
 
-      # - name: 'build product.api'
-      #   run: |
-      #     docker build
-      #     docker push
+          #docker push
 
-      # - name: 'build profile.api'
-      #   run: |
-      #     docker build
-      #     docker push
+      - name: 'build product.api'
+        with:
+          path: Source
+        run: |
+          docker build -f Services/Tailwind.Traders.Product.Api/Dockerfile . -t $CONTAINER_REGISTRY/product.api:$GITHUB_SHA
 
-      # - name: 'login.api'
-      #   run: |
-      #     docker build
-      #     docker push
+          #docker push
 
-      # - name: 'coupon.api'
-      #   run: |
-      #     docker build
-      #     docker push
+      - name: 'build profile.api'
+        with:
+          path: Source
+        run: |
+          docker build - f Services/Tailwind.Traders.Profile.Api/Dockerfile . -t $CONTAINER_REGISTRY/profile.api:$GITHUB_SHA
 
-      # - name: 'popular-product.api'
-      #   run: |
-      #     docker build
-      #     docker push
+          #docker push
+
+      - name: 'login.api'
+        with:
+          path: Source
+        run: |
+          docker build -f Services/Tailwind.Traders.Login.Api/Dockerfile . -t $CONTAINER_REGISTRY/login.api:$GITHUB_SHA
+
+          #docker push
+
+      - name: 'coupon.api'
+        with:
+          path: Source
+        run: |
+          docker build Services/Tailwind.Traders.Coupon.Api/ -t $CONTAINER_REGISTRY/coupon.api:$GITHUB_SHA
+
+          #docker push
+
+      - name: 'popular-product.api'
+        with:
+          path: Source
+        run: |
+          docker build -f Services/Tailwind.Traders.PopularProduct.Api/Dockerfile . -t $CONTAINER_REGISTRY/popular-product.api:$GITHUB_SHA
+
+          #docker push
           
-      # - name: 'stock.api'
-      #   run: |
-      #     docker build
-      #     docker push
+      - name: 'stock.api'
+        with:
+          path: Source
+        run: |
+          docker build Services/Tailwind.Traders.Stock.Api/ -t $CONTAINER_REGISTRY/stock.api:$GITHUB_SHA
 
-      # - name: 'image-classifier.api'
-      #   run: |
-      #     docker build
-      #     docker push
+          #docker push
 
-      # - name: 'mobileapigw'
-      #   run: |
-      #     docker build
-      #     docker push
+      - name: 'image-classifier.api'
+        with:
+          path: Source
+        run: |
+          docker build -f Services/Tailwind.Traders.ImageClassifier.Api/Dockerfile . -t $CONTAINER_REGISTRY/image-classifier.api:$GITHUB_SHA
 
-      # - name: 'webapigw'
-      #   run: |
-      #     docker build
-      #     docker push
+          #docker push
+
+      - name: 'mobileapigw'
+        with:
+          path: Source
+        run: |
+          docker build -f ApiGWs/Tailwind.Traders.Bff/Dockerfile . -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
+
+          #docker push
+
+      - name: 'webapigw'
+        with:
+          path: Source
+        run: |
+          docker build -f ApiGWs/Tailwind.Traders.WebBff/Dockerfile . -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
+
+          #docker push
 
   deployApplication:
     runs-on: self-hosted
     needs: buildImages
     steps:
       - name: 'deploy k8s helm charts'
-        # TODO: need to break out into individual steps for each api
+        # TODO: need to break out into individual steps for each api; need to use variables from other jobs/steps
         env:
           nameSpace: twt
         run: |
@@ -416,7 +457,7 @@ jobs:
       - name: 'Notes'
         run: |
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
-          
+
           INGRESS=$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
   
           echo "*************** Connection Information ***************"
