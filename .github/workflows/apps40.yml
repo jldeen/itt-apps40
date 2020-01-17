@@ -366,9 +366,14 @@ jobs:
                 host: 'amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672'
                 queueLength  : '5'
           EOF
-          
+
       - name: 'Notes'
         run: |
+          INGRESS=$(az aks show -n $AKS_CLUSTER -g $azureResourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
+          
+          AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+          
+
           echo "*************** Connection Information ***************"
           echo "The Tailwind Traders Website can be accessed at:"
           echo "http://$INGRESS"
