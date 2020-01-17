@@ -151,7 +151,7 @@ jobs:
       env:
         nameSpace: twt
       run: |
-        # namespace
+        # twt namespace
         kubectl get ns | grep $nameSpace > /dev/null
 
         if [ $? -eq 0 ]; then
@@ -162,6 +162,18 @@ jobs:
           kubectl create namespace $nameSpace
 
           kubectl label namespace/$nameSpace purpose=prod-app
+        fi
+
+        # keda namespace
+        kubectl get ns | grep keda > /dev/null
+
+        if [ $? -eq 0 ]; then
+            echo "Namespace keda already exists."
+        else
+          echo "Namespace keda does not exist. Creating keda namespace now."
+
+          kubectl create namespace keda
+
         fi
 
         cat <<EOF | kubectl apply -f -
