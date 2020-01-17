@@ -207,20 +207,20 @@ jobs:
       run: |
         pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
   
-  buildImages:
-    runs-on: self-hosted
-    needs: deployInfra
-    steps:
-      - name: 'build cart.api'
-      - name: 'build product.api'
-      - name: 'build profile.api'
-      - name: 'login.api'
-      - name: 'coupon.api'
-      - name: 'popular-product.api'
-      - name: 'stock.api'
-      - name: 'image-classifier.api'
-      - name: 'mobileapigw'
-      - name: 'webapigw'
+  # buildImages:
+  #   runs-on: self-hosted
+  #   needs: deployInfra
+  #   steps:
+  #     - name: 'build cart.api'
+  #     - name: 'build product.api'
+  #     - name: 'build profile.api'
+  #     - name: 'login.api'
+  #     - name: 'coupon.api'
+  #     - name: 'popular-product.api'
+  #     - name: 'stock.api'
+  #     - name: 'image-classifier.api'
+  #     - name: 'mobileapigw'
+  #     - name: 'webapigw'
 
   deployApplication:
     runs-on: self-hosted
