@@ -62,7 +62,7 @@ jobs:
     - name: 'Create Virtual Node Subnet'
       run: |
         # run check for idempotent pipeline
-        vnetSubnetCheck=$(az network vnet subnet list -g $resourceGroup --vnet-name k8sVNet -o tsv --query '[0].name')
+        vnetSubnetCheck=$(az network vnet subnet list -g $resourceGroup --vnet-name k8sVNet -o tsv --query '[1].name')
 
         if [[  $vnetSubnetCheck  ]]; then
           echo 'Virtual node subnet already exists'
@@ -103,10 +103,10 @@ jobs:
     - name: 'Install Virtual Node on K8s cluster'
       run: |
           # Disable virtual node
-          az aks disable-addons \
-          --resource-group $resourceGroup  \
-          --name $AKS_CLUSTER \
-          --addons virtual-node
+          # az aks disable-addons \
+          # --resource-group $resourceGroup  \
+          # --name $AKS_CLUSTER \
+          # --addons virtual-node
 
           # Deploy virtual node 
           az aks enable-addons \
