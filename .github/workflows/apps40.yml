@@ -265,7 +265,7 @@ jobs:
       - name: 'buid/push web frontend'
         run: |
           rm -rf TailwindTraders-Website
-          # git clone https://github.com/neilpeterson/TailwindTraders-Website.git
+
           git clone https://github.com/microsoft/TailwindTraders-Website.git
 
           docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t $CONTAINER_REGISTRY/web:$GITHUB_SHA
@@ -354,7 +354,7 @@ jobs:
       - name: 'helm install web frontend'
         run: |
           # twt web
-          helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/web --set image.tag=$GITHUB_SHA TailwindTraders-Website/Deploy/helm/web/
+          helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/web --set image.tag=$GITHUB_SHA --set B2C.UseB2C=false TailwindTraders-Website/Deploy/helm/web/
 
       - name: 'Label all pods for network policy'
         run: |
