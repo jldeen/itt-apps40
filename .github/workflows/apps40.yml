@@ -85,6 +85,8 @@ jobs:
           aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
         echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
 
+        AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+
         az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin --overwrite-existing
 
     # Application Insights (using preview extension)
