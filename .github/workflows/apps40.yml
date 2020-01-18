@@ -106,10 +106,10 @@ jobs:
     - name: 'Install Virtual Node on K8s cluster'
       run: |
           # Disable virtual node
-          # az aks disable-addons \
-          # --resource-group $resourceGroup  \
-          # --name $AKS_CLUSTER \
-          # --addons virtual-node
+          az aks disable-addons \
+          --resource-group $resourceGroup  \
+          --name $AKS_CLUSTER \
+          --addons virtual-node
 
           # Deploy virtual node 
           az aks enable-addons \
