@@ -130,7 +130,7 @@ jobs:
       env:
         nameSpace: keda
       run: |
-       # keda namespace
+        # keda namespace
         cat <<EOF | kubectl apply -f -
         apiVersion: v1
         kind: Namespace
