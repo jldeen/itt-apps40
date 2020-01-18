@@ -103,8 +103,9 @@ jobs:
       run: |
           # Disable virtual node
           az aks disable-addons \
-          -a virtual-node \
-          --resource-group $resourceGroup
+          --resource-group $resourceGroup  \
+          --name $AKS_CLUSTER \
+          --addons virtual-node
 
           # Deploy virtual node 
           az aks enable-addons \
