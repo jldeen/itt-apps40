@@ -62,7 +62,7 @@ jobs:
     - name: 'Create Virtual Node Subnet'
       run: |
         # run check for idempotent pipeline
-        vnetSubnetCheck=$(az network vnet subnet list -g ghapps40jd --vnet-name k8sVNet -o tsv --query '[0].name')
+        vnetSubnetCheck=$(az network vnet subnet list -g $resourceGroup --vnet-name k8sVNet -o tsv --query '[0].name')
 
         if [[  $vnetSubnetCheck  ]]; then
           echo 'Virtual node subnet already exists'
