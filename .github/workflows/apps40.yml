@@ -161,9 +161,11 @@ jobs:
         run: |
           # fresh download
           rm -rf TailwindTraders-Backend
-          git clone https://github.com/microsoft/TailwindTraders-Backend.git
+          # git clone https://github.com/microsoft/TailwindTraders-Backend.git
+          
+          git clone https://github.com/neilpeterson/TailwindTraders-Backend.git
 
-          git -C TailwindTraders-Backend checkout ed86d5f  
+          # git -C TailwindTraders-Backend checkout ed86d5f  
 
       - name: 'Create Helm gvalues file'
         run: |
@@ -247,7 +249,7 @@ jobs:
 
       - name: 'build/push mobileapigw'
         run: |
-          git -C TailwindTraders-Backend checkout master
+          # git -C TailwindTraders-Backend checkout master
 
           docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
@@ -345,9 +347,9 @@ jobs:
       - name: 'helm install web bff api'
         run: |
           # twt web bff
-          # helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/webapigw --set image.tag=$GITHUB_SHA $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
+          helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/webapigw --set image.tag=$GITHUB_SHA $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
 
-          helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/webapigw --set image.tag=v2 $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
+          # helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/webapigw --set image.tag=v2 $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
       
       - name: 'helm install web frontend'
         run: |
