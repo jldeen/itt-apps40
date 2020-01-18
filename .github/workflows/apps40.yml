@@ -82,6 +82,10 @@ jobs:
                 az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16  
               fi
           fi
+        else
+          echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
+          # configure vnet subnet
+          az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16 
         fi
   
     # Deploy backend infrastructure
