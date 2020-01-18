@@ -49,6 +49,7 @@ jobs:
         AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
         if [[  $AKS_CLUSTER  ]]; then
+          rm -rf ~/.kube/config
           az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
           if [ $? -eq 0 ]; then
             kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
@@ -75,6 +76,7 @@ jobs:
         AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
         if [[  $AKS_CLUSTER  ]]; then
+          rm -rf ~/.kube/config
           az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
           if [ $? -eq 0 ]; then
             kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
