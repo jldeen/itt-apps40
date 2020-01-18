@@ -63,8 +63,8 @@ jobs:
           fi
         else
           echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
-          # configure vnet subnet
-          az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
+          # create vnet
+          az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
         fi
 
     # create virtual node subnet
