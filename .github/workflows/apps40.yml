@@ -320,7 +320,7 @@ jobs:
       - name: 'helm install popular product api'
         run: |
           # twt popular product
-          helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/popular-product.api --set image.tag=$GITHUB_SHA --set initImage.repository=$containerRegistry/popular-product-seed.api --set initImage.tag=latest --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
+          helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/popular-product.api --set image.tag=$GITHUB_SHA --set initImage.repository=$CONTAINER_REGISTRY/popular-product-seed.api --set initImage.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
 
       - name: 'helm install stock api'
         run: |
