@@ -161,9 +161,9 @@ jobs:
         run: |
           # fresh download
           rm -rf TailwindTraders-Backend
-          # git clone https://github.com/microsoft/TailwindTraders-Backend.git
+          git clone https://github.com/microsoft/TailwindTraders-Backend.git
           
-          git clone https://github.com/neilpeterson/TailwindTraders-Backend.git
+          # git clone https://github.com/neilpeterson/TailwindTraders-Backend.git
 
           # git -C TailwindTraders-Backend checkout ed86d5f  
 
