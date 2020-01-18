@@ -172,13 +172,13 @@ jobs:
         run: |
           echo "Retrieving Container Registry info..."
 
-          acrName=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
-          CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query [0].loginServer
+          acrName=$(az acr list -g $resourceGroup -o tsv --query [0].name)
+          CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query [0].loginServer)
 
-          # echo "::set-env name=CONTAINER_REGISTRY::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
+          # echo "::set-env name=CONTAINER_REGISTRY::$(az acr list -g $resourceGroup -o tsv --query [0].name)"
 
           # acr/container registry variables
-          # echo "::set-env name=acrName::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
+          # echo "::set-env name=acrName::$(az acr list -g $resourceGroup -o tsv --query [0].name)"
 
           echo "::set-env name=CONTAINER_REGISTRY::$(az acr list -g $resourceGroup -o tsv --query [0].loginServer)"
 
