@@ -338,14 +338,16 @@ jobs:
       - name: 'helm install mobile bff api'
         run: |
           # twt mobile bff
-          # helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/mobileapigw --set image.tag=$GITHUB_SHA --set probes.readiness=null $tailwindCharts/mobilebff
+          helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/mobileapigw --set image.tag=$GITHUB_SHA --set probes.readiness=null $tailwindCharts/mobilebff
 
-          helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/mobileapigw --set image.tag=v2 --set probes.readiness=null $tailwindCharts/mobilebff
+          # helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/mobileapigw --set image.tag=v2 --set probes.readiness=null $tailwindCharts/mobilebff
 
       - name: 'helm install web bff api'
         run: |
           # twt web bff
-          helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/webapigw --set image.tag=$GITHUB_SHA $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
+          # helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/webapigw --set image.tag=$GITHUB_SHA $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
+
+          helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/webapigw --set image.tag=v2 $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
       
       - name: 'helm install web frontend'
         run: |
