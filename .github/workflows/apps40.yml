@@ -255,8 +255,8 @@ jobs:
 
       - name: 'build/push webapigw'
         run: |
-          git -C TailwindTraders-Backend checkout ed86d5f
-          
+          # git -C TailwindTraders-Backend checkout ed86d5f
+
           docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
