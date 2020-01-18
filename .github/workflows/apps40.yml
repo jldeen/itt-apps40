@@ -194,13 +194,13 @@ jobs:
         run: |
           echo "Retrieving Container Registry info..."
           acrName=$(az acr list -g $resourceGroup -o tsv --query "[0].name")
-          CONTAINER_REGISTRY=$acrName/azurecr.io
+          CONTAINER_REGISTRY=$acrName.azurecr.io
 
           # echo "::set-env name=CONTAINER_REGISTRY::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
 
           # acr/container registry variables
           echo "::set-env name=acrName::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
-          echo "::set-env name=CONTAINER_REGISTRY::$acrName/azurecr.io"
+          echo "::set-env name=CONTAINER_REGISTRY::$acrName.azurecr.io"
 
           echo "::set-env name=REGISTRY_USERNAME::$(az acr credential show -n $acrName --query username -o tsv)"
           echo "::set-env name=REGISTRY_PASSWORD::$(az acr credential show -n $acrName -o tsv --query passwords[0].value)"
@@ -308,7 +308,7 @@ jobs:
 
           # acr/container registry variables
           echo "::set-env name=acrName::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
-          echo "::set-env name=CONTAINER_REGISTRY::$acrName/azurecr.io"
+          echo "::set-env name=CONTAINER_REGISTRY::$acrName.azurecr.io"
 
           echo "::set-env name=pictures::$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)"
 
