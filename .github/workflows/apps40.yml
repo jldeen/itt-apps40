@@ -46,10 +46,9 @@ jobs:
     - name: 'Create Virtual Network'
       run: |
         # run check for idempotent pipeline
+        AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
-        aksCheck=$(az aks list --resource-group $resourceGroup -o tsv --query [0].name)
-
-        if [[  $aksCheck  ]]; then
+        if [[  $AKS_CLUSTER  ]]; then
           az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
           if [ $? -eq 0 ]; then
             kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
@@ -62,7 +61,7 @@ jobs:
               fi
           fi
         else
-          echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
+          echo 'Virtual network does not exist. Creating virtual network now.'
           # create vnet
           az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
         fi
@@ -72,9 +71,10 @@ jobs:
       run: |
         # run check for idempotent pipeline
         
-        aksCheck=$(az aks list --resource-group $resourceGroup -o tsv --query [0].name)
+        # run check for idempotent pipeline
+        AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
-        if [[  $aksCheck  ]]; then
+        if [[  $AKS_CLUSTER  ]]; then
           az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
           if [ $? -eq 0 ]; then
             kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
@@ -135,7 +135,7 @@ jobs:
         if [ $? -eq 0 ]; then
             echo 'Virtual node already exists'
         else
-          echo 'Virtual node does not exist. Creating virtual now.'
+          echo 'Virtual node does not exist. Creating virtual node now.'
 
           # Deploy virtual node 
           az aks enable-addons \
