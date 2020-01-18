@@ -248,13 +248,13 @@ jobs:
         run: |
           docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
-          docker push $CONTAINER_REGISTRY/mobileapigw.api:$GITHUB_SHA
+          docker push $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
       - name: 'build/push webapigw'
         run: |
           docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
 
-          docker push $CONTAINER_REGISTRY/webapigw.api:$GITHUB_SHA
+          docker push $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
       
       - name: 'buid/push web frontend'
         run: |
@@ -264,10 +264,6 @@ jobs:
           docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t $CONTAINER_REGISTRY/web:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/web:$GITHUB_SHA
-
-
-          # temp
-          echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
 
   deployMicroservices:
     runs-on: self-hosted
@@ -286,7 +282,8 @@ jobs:
           echo "::set-env name=INGRESS::$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)"
 
           # acr/container registry variables
-          echo "::set-env name=acrName::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
+          # echo "::set-env name=acrName::$(az acr list -g $resourceGroup -o tsv --query "[0].name")"
+
           echo "::set-env name=CONTAINER_REGISTRY::$(az acr list -g $resourceGroup -o tsv --query [0].loginServer)"
 
           echo "::set-env name=pictures::$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)"
