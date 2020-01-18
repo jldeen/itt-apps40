@@ -190,9 +190,9 @@ jobs:
       - name: 'docker login'
         uses: azure/docker-login@v1
         with:
-          login-server: $CONTAINER_REGISTRY
-          username: $REGISTRY_USERNAME
-          password: $REGISTRY_PASSWORD
+          login-server: ${{ env.CONTAINER_REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
 
       - name: 'build/push cart.api'
         run: |
