@@ -47,7 +47,18 @@ jobs:
       run: |
         # run check for idempotent pipeline
 
-        kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
+        aksCheck=$(az aks list --resource-group apps40jd -o tsv --query [0].name)
+
+        if [[  -z $aksCheck  ]]; then
+          az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin
+          if [ $? -eq 0 ]; then
+            kubectl get nodes | grep "virtual-node-aci-linux" > /dev/null
+              if [ $? -eq 0 ]; then
+                echo 'Virtual network already exists'
+              fi
+          fi
+        fi
+
 
         if [ $? -eq 0 ]; then
             echo 'Virtual network already exists'
