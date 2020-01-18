@@ -3,7 +3,7 @@ on: [push]
 name: apps40-full-cicd
 
 env:
-  resourceGroup: ittapps40jd
+  resourceGroup: itt40jd
   location: eastus
   SESSION_CODE: itt-apps40
   USER_ID: jessde
