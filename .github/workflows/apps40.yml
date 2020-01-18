@@ -247,12 +247,16 @@ jobs:
 
       - name: 'build/push mobileapigw'
         run: |
+          git -C TailwindTraders-Backend checkout master
+
           docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
       - name: 'build/push webapigw'
         run: |
+          git -C TailwindTraders-Backend checkout ed86d5f
+          
           docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
