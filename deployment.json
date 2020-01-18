@@ -34,7 +34,7 @@
       "function_name": "[concat('ttfunction',uniqueString(resourceGroup().id))]",
       "sqlserver_name": "[concat('ttsqlserver',uniqueString(resourceGroup().id))]",
       "pg_name": "[concat('ttpg',uniqueString(resourceGroup().id))]",
-      "cuopons_cosmosdb_name": "[concat('ttcuoponsdb',uniqueString(resourceGroup().id))]",
+      "coupons_cosmosdb_name": "[concat('ttcouponsdb',uniqueString(resourceGroup().id))]",
       "shopping_cosmosdb_name": "[concat('ttshoppingdb',uniqueString(resourceGroup().id))]",
       "workspaceName": "[concat('ttoms', uniqueString(resourceGroup().id))]",
       "omsWorkspaceId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.OperationalInsights/workspaces/', variables('workspaceName'))]",
