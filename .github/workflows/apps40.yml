@@ -115,7 +115,7 @@ jobs:
         # twt namespace
         kubectl get ns | grep $nameSpace > /dev/null
 
-        if [ $? -eq 0 ]; then
+        if [[ $? -eq 0 ]]; then
             echo "Namespace $nameSpace already exists."
         else
           echo "Namespace $nameSpace does not exist. Creating $nameSpace namespace now."
