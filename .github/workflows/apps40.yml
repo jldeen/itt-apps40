@@ -107,7 +107,7 @@ jobs:
       run: |
           vNodeEnabledCheck=$(az aks show --resource-group $resourceGroup --name $AKS_CLUSTER --query addonProfiles.aciConnectorLinux.enabled -o tsv)
 
-          if [[ $vNodeEnabledCheck -eq true ]]; then
+          if [[ $vNodeEnabledCheck == *true*  ]]; then
             echo "AKS Virtual Node add-on already enabled."
           else
             # Deploy virtual node 
