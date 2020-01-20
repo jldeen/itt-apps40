@@ -115,7 +115,7 @@ jobs:
             --resource-group $resourceGroup  \
             --name $AKS_CLUSTER \
             --addons virtual-node \
-            --subnet-name 
+            --subnet-name VNSubnet
           fi
 
     - name: 'Create k8s twt namespace'
