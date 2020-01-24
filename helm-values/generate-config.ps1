@@ -5,7 +5,7 @@ Param (
     [parameter(Mandatory=$false)][string[]]$outputFile=$null,
     [parameter(Mandatory=$false)][string]$rewardsResourceGroup="",
     [parameter(Mandatory=$false)][string]$rewardsDbPassword="",
-    [parameter(Mandatory=$false)][string[]]$gvaluesTemplate="..,helm,gvalues.template",
+    [parameter(Mandatory=$false)][string]$gvaluesTemplate="$PSScriptRoot/gvalues.template",
     [parameter(Mandatory=$false)][string]$ingressClass="addon-http-application-routing"
 )
 
