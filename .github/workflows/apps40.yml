@@ -28,83 +28,83 @@ jobs:
   deployInfra:
     runs-on: self-hosted
     steps:
-    # checkout branch
-    - name: git checkout master branch 
-      uses: actions/checkout@master
+      # checkout branch
+      - name: git checkout master branch
+        uses: actions/checkout@master
 
-    # log into Azure
-    - name: 'Login via Azure CLI'
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    # create resource group
-    - name: 'Create Resource Group'
-      run: |
-        az group create --subscription "$subName" --name $resourceGroup --location $location --tags ITT-Tracking=$SESSION_CODE CreatedBy=$USER_ID
-    
-    # create VNet
-    - name: 'Create Virtual Network'
-      run: |
-        # run check for idempotent pipeline
+      # log into Azure
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-        vnetCheck=$(az network vnet list -g $resourceGroup -o tsv --query [0].name)
+      # create resource group
+      - name: "Create Resource Group"
+        run: |
+          az group create --subscription "$subName" --name $resourceGroup --location $location --tags ITT-Tracking=$SESSION_CODE CreatedBy=$USER_ID
 
-        if [[  $vnetCheck  ]]; then
-          echo 'Virtual Network already exists'
-        else
-          echo 'Virtual network does not exist. Creating virtual network now.'
-          # create vnet
-          az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
-        fi
+      # create VNet
+      - name: "Create Virtual Network"
+        run: |
+          # run check for idempotent pipeline
 
-    # create virtual node subnet
-    - name: 'Create Virtual Node Subnet'
-      run: |
-        # run check for idempotent pipeline
-        vnetSubnetCheck=$(az network vnet subnet list -g $resourceGroup --vnet-name k8sVNet -o tsv --query '[1].name')
+          vnetCheck=$(az network vnet list -g $resourceGroup -o tsv --query [0].name)
 
-        if [[  $vnetSubnetCheck  ]]; then
-          echo 'Virtual node subnet already exists'
-        else
-          echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
-          # configure vnet subnet
-          az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16 
-        fi
-  
-    # Deploy backend infrastructure
-    - name: 'Setup Backend Infra'
-      env:
-        azureClientID: e13daae5-2cb2-4df1-ab7d-7dbe139e3e95
-      run: |
-        vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
+          if [[  $vnetCheck  ]]; then
+            echo 'Virtual Network already exists'
+          else
+            echo 'Virtual network does not exist. Creating virtual network now.'
+            # create vnet
+            az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
+          fi
 
-        az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
-          --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
-          sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
-          aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
-        echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
+      # create virtual node subnet
+      - name: "Create Virtual Node Subnet"
+        run: |
+          # run check for idempotent pipeline
+          vnetSubnetCheck=$(az network vnet subnet list -g $resourceGroup --vnet-name k8sVNet -o tsv --query '[1].name')
 
-        AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+          if [[  $vnetSubnetCheck  ]]; then
+            echo 'Virtual node subnet already exists'
+          else
+            echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
+            # configure vnet subnet
+            az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16 
+          fi
 
-        az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin --overwrite-existing
+      # Deploy backend infrastructure
+      - name: "Setup Backend Infra"
+        env:
+          azureClientID: e13daae5-2cb2-4df1-ab7d-7dbe139e3e95
+        run: |
+          vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
 
-    # Application Insights (using preview extension)
-    - name: 'Create Application Insights'
-      run: |
-        az extension add -n application-insights
-        instrumentationKey=$(az monitor app-insights component show --app tt-app-insights --resource-group $resourceGroup --query instrumentationKey -o tsv)
+          az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
+            --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
+            sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
+            aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
+          echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
 
-    # create postgres DB, Disable SSL, and set Firewall  
-    - name: 'Create postgres DB, Disable SSL and set firewall'
-      run: |
-        POSTGRES=$(az postgres server list --resource-group $resourceGroup --query [0].name -o tsv)
-        az postgres db create -g $resourceGroup -s $POSTGRES -n stockdb
-        az postgres server update --resource-group $resourceGroup --name $POSTGRES --ssl-enforcement Disabled
-        az postgres server firewall-rule create --resource-group $resourceGroup --server-name $POSTGRES --name AllowAllAzureIps --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
-    
-    - name: 'Install Virtual Node on K8s cluster'
-      run: |
+          AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+
+          az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin --overwrite-existing
+
+      # Application Insights (using preview extension)
+      - name: "Create Application Insights"
+        run: |
+          az extension add -n application-insights
+          instrumentationKey=$(az monitor app-insights component show --app tt-app-insights --resource-group $resourceGroup --query instrumentationKey -o tsv)
+
+      # create postgres DB, Disable SSL, and set Firewall
+      - name: "Create postgres DB, Disable SSL and set firewall"
+        run: |
+          POSTGRES=$(az postgres server list --resource-group $resourceGroup --query [0].name -o tsv)
+          az postgres db create -g $resourceGroup -s $POSTGRES -n stockdb
+          az postgres server update --resource-group $resourceGroup --name $POSTGRES --ssl-enforcement Disabled
+          az postgres server firewall-rule create --resource-group $resourceGroup --server-name $POSTGRES --name AllowAllAzureIps --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+
+      - name: "Install Virtual Node on K8s cluster"
+        run: |
           vNodeEnabledCheck=$(az aks show --resource-group $resourceGroup --name $AKS_CLUSTER --query addonProfiles.aciConnectorLinux.enabled -o tsv)
 
           if [[ $vNodeEnabledCheck == *true*  ]]; then
@@ -118,62 +118,62 @@ jobs:
             --subnet-name VNSubnet
           fi
 
-    - name: 'Create k8s twt namespace'
-      env:
-        nameSpace: twt
-      run: |
-        # twt namespace
-        cat <<EOF | kubectl apply -f -
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: $nameSpace
-        EOF
+      - name: "Create k8s twt namespace"
+        env:
+          nameSpace: twt
+        run: |
+          # twt namespace
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: $nameSpace
+          EOF
 
-    - name: 'Create keda namespace'
-      env:
-        nameSpace: keda
-      run: |
-        # keda namespace
-        cat <<EOF | kubectl apply -f -
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: $nameSpace
-        EOF
+      - name: "Create keda namespace"
+        env:
+          nameSpace: keda
+        run: |
+          # keda namespace
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: $nameSpace
+          EOF
 
-    - name: 'Create k8s service account'
-      env:
-        nameSpace: twt
-      run: |
-        cat <<EOF | kubectl apply -f -
-        apiVersion: v1
-        kind: ServiceAccount
-        imagePullSecrets:
-        - name: acr-auth
-        metadata:
-          name: ttsa
-          namespace: $nameSpace
-        EOF
-  
+      - name: "Create k8s service account"
+        env:
+          nameSpace: twt
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: ServiceAccount
+          imagePullSecrets:
+          - name: acr-auth
+          metadata:
+            name: ttsa
+            namespace: $nameSpace
+          EOF
+
   buildImages:
     runs-on: self-hosted
     needs: deployInfra
     steps:
-      - name: 'Checkout TailwindTraders Backend Source'
+      - name: "Checkout TailwindTraders Backend Source"
         run: |
           # fresh download
           rm -rf TailwindTraders-Backend
 
           git clone https://github.com/microsoft/TailwindTraders-Backend.git
-          
-          # git -C TailwindTraders-Backend checkout ed86d5f  
 
-      - name: 'Create Helm gvalues file'
+          # git -C TailwindTraders-Backend checkout ed86d5f
+
+      - name: "Create Helm gvalues file"
         run: |
           pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -outputFile $tailwindChartValues
 
-      - name: 'Get ACR Container Information'
+      - name: "Get ACR Container Information"
         run: |
           echo "Retrieving Container Registry info..."
 
@@ -190,16 +190,15 @@ jobs:
 
           echo "::set-env name=pictures::$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)"
 
-
       # docker login
-      - name: 'docker login'
+      - name: "docker login"
         uses: azure/docker-login@v1
         with:
           login-server: ${{ env.CONTAINER_REGISTRY }}
           username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ env.REGISTRY_PASSWORD }}
 
-      - name: 'build/push cart.api'
+      - name: "build/push cart.api"
         run: |
           # echo "Your container registry is: $CONTAINER_REGISTRY. Your registry username is: $REGISTRY_USERNAME and your registry password is: $REGISTRY_PASSWORD"
 
@@ -207,49 +206,49 @@ jobs:
 
           docker push $CONTAINER_REGISTRY/cart.api:$GITHUB_SHA
 
-      - name: 'build/push product.api'
+      - name: "build/push product.api"
         run: |
           docker build -f $dPath/Services/Tailwind.Traders.Product.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/product.api:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/product.api:$GITHUB_SHA
 
-      - name: 'build/push profile.api'
+      - name: "build/push profile.api"
         run: |
           docker build -f $dPath/Services/Tailwind.Traders.Profile.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/profile.api:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/profile.api:$GITHUB_SHA
 
-      - name: 'build/push login.api'
+      - name: "build/push login.api"
         run: |
           docker build -f $dPath/Services/Tailwind.Traders.Login.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/login.api:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/login.api:$GITHUB_SHA
 
-      - name: 'build/push coupon.api'
+      - name: "build/push coupon.api"
         run: |
           docker build $dPath/Services/Tailwind.Traders.Coupon.Api/ -t $CONTAINER_REGISTRY/coupon.api:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/coupon.api:$GITHUB_SHA
 
-      - name: 'build/push popular-product.api'
+      - name: "build/push popular-product.api"
         run: |
           docker build -f $dPath/Services/Tailwind.Traders.PopularProduct.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/popular-product.api:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/popular-product.api:$GITHUB_SHA
-          
-      - name: 'build/push stock.api'
+
+      - name: "build/push stock.api"
         run: |
           docker build $dPath/Services/Tailwind.Traders.Stock.Api/ -t $CONTAINER_REGISTRY/stock.api:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/stock.api:$GITHUB_SHA
 
-      - name: 'build/push image-classifier.api'
+      - name: "build/push image-classifier.api"
         run: |
           docker build -f $dPath/Services/Tailwind.Traders.ImageClassifier.Api/Dockerfile $dPath -t $CONTAINER_REGISTRY/image-classifier.api:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/image-classifier.api:$GITHUB_SHA
 
-      - name: 'build/push mobileapigw'
+      - name: "build/push mobileapigw"
         run: |
           git -C TailwindTraders-Backend checkout master
 
@@ -257,15 +256,15 @@ jobs:
 
           docker push $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
-      - name: 'build/push webapigw'
+      - name: "build/push webapigw"
         run: |
           # git -C TailwindTraders-Backend checkout ed86d5f
 
           docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
-      
-      - name: 'buid/push web frontend'
+
+      - name: "buid/push web frontend"
         run: |
           rm -rf TailwindTraders-Website
 
@@ -282,7 +281,7 @@ jobs:
     env:
       nameSpace: twt
     steps:
-      - name: 'configure deployment environment'
+      - name: "configure deployment environment"
         run: |
           # set for this step
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
@@ -301,74 +300,74 @@ jobs:
 
           # git -C TailwindTraders-Backend checkout ed86d5f
 
-      - name: 'helm install login api'
+      - name: "helm install login api"
         run: |
           # twt login
           helm upgrade --install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/login.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
-      
-      - name: 'helm install product api'
+
+      - name: "helm install product api"
         run: |
           # twt product
           helm upgrade --install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/product.api --set image.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail --set az.productvisitsurl=http://your-product-visits-af-here $tailwindCharts/products-api
 
-      - name: 'helm install coupon api'
+      - name: "helm install coupon api"
         run: |
           # twt coupon
           helm upgrade --install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/coupon.api --set image.tag=$GITHUB_SHA --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
-      
-      - name: 'helm install profile api'
+
+      - name: "helm install profile api"
         run: |
           # twt profile
           helm upgrade --install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/profile.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
 
-      - name: 'helm install popular product api'
+      - name: "helm install popular product api"
         run: |
           # twt popular product
           helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/popular-product.api --set image.tag=$GITHUB_SHA --set initImage.repository=$CONTAINER_REGISTRY/popular-product-seed.api --set initImage.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
 
-      - name: 'helm install stock api'
+      - name: "helm install stock api"
         run: |
           # twt stock
           helm upgrade --install my-tt-stock -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/stock.api --set image.tag=$GITHUB_SHA $tailwindCharts/stock-api
 
-      - name: 'helm install image classifier api'
+      - name: "helm install image classifier api"
         run: |
           # twt image classifier
           helm upgrade --install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/image-classifier.api --set image.tag=$GITHUB_SHA $tailwindCharts/image-classifier-api
 
-      - name: 'helm install cart api'
+      - name: "helm install cart api"
         run: |
           # twt cart
           helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/cart.api --set image.tag=$GITHUB_SHA $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none --set B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
 
-      - name: 'helm install mobile bff api'
+      - name: "helm install mobile bff api"
         run: |
           # twt mobile bff
           helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/mobileapigw --set image.tag=$GITHUB_SHA --set probes.readiness=null $tailwindCharts/mobilebff
 
           # helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/mobileapigw --set image.tag=v2 --set probes.readiness=null $tailwindCharts/mobilebff
 
-      - name: 'helm install web bff api'
+      - name: "helm install web bff api"
         run: |
           # twt web bff
           helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/webapigw --set image.tag=$GITHUB_SHA $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
 
           # helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/webapigw --set image.tag=v2 $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
-      
-      - name: 'helm install web frontend'
+
+      - name: "helm install web frontend"
         run: |
           # twt web
           helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/web --set image.tag=$GITHUB_SHA TailwindTraders-Website/Deploy/helm/web/
 
-      - name: 'Label all pods for network policy'
+      - name: "Label all pods for network policy"
         run: |
           # remove label if exist
           kubectl label -n twt pods --all role- > /dev/null && echo "Removing pod labels if exist"
-          
+
           # add label  
           kubectl label -n twt pods --all role=twt-app
 
-      - name: 'Copy website images to storage'
+      - name: "Copy website images to storage"
         run: |
           STORAGE=$(az storage account list -g $resourceGroup -o table --query  [].name -o tsv)
           BLOB_ENDPOINT=$(az storage account list -g $resourceGroup --query [].primaryEndpoints.blob -o tsv)
@@ -382,12 +381,12 @@ jobs:
           az storage blob upload-batch --destination $BLOB_ENDPOINT --destination product-list --source $tailwindWebImages/product-list --account-name $STORAGE
           az storage blob upload-batch --destination $BLOB_ENDPOINT --destination profiles-list --source $tailwindWebImages/profiles-list --account-name $STORAGE
 
-      - name: 'Setup scaling backend components'
+      - name: "Setup scaling backend components"
         run: |
           # add kedacore repo
           helm repo add kedacore https://kedacore.github.io/charts
- 
-          
+
+
           # add stable repo for helm 3
           helm repo add stable http://storage.googleapis.com/kubernetes-charts
 
@@ -401,6 +400,13 @@ jobs:
           helm upgrade --install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD stable/rabbitmq
 
           cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: rabbitmq-consumer
+          data:
+            RabbitMqHost: YW1xcDovL3VzZXI6UEFTU1dPUkRAcmFiYml0bXEuZGVmYXVsdC5zdmMuY2x1c3Rlci5sb2NhbDo1Njcy
+          ---
           apiVersion: apps/v1
           kind: Deployment
           metadata:
@@ -425,6 +431,9 @@ jobs:
                     - receive
                   args:
                     - 'amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672'
+                  envFrom:
+                  - secretRef:
+                      name: rabbitmq-consumer
                 dnsPolicy: ClusterFirst
                 nodeSelector:
                   kubernetes.io/role: agent
@@ -434,12 +443,14 @@ jobs:
                 - key: virtual-kubelet.io/provider
                   operator: Exists
                 - key: azure.com/aci
-                  effect: NoSchedule      
+                  effect: NoSchedule    
           ---
           apiVersion: keda.k8s.io/v1alpha1
           kind: ScaledObject
           metadata:
             name: rabbitmq-consumer
+            annotations:
+              "helm.sh/hook": crd-install
             namespace: default
             labels:
               deploymentName: rabbitmq-consumer
@@ -453,14 +464,14 @@ jobs:
             - type: rabbitmq
               metadata:
                 queueName: hello
-                host: 'amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672'
+                host: RabbitMqHost
                 queueLength  : '5'
           EOF
 
-      - name: 'Notes'
+      - name: "Notes"
         run: |
           INGRESS=$(az aks show -n $AKS_CLUSTER -g $resourceGroup --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)
-  
+
           echo "*************** Connection Information ***************"
           echo "The Tailwind Traders Website can be accessed at:"
           echo "http://{$INGRESS}"
@@ -469,6 +480,6 @@ jobs:
           echo "az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin"
           echo "******************************************************"
       # logout
-      - name: 'Azure logout'
+      - name: "Azure logout"
         run: |
           az logout
