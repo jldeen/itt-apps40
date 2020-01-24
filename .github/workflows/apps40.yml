@@ -167,7 +167,7 @@ jobs:
 
           git clone https://github.com/microsoft/TailwindTraders-Backend.git
           
-          git -C TailwindTraders-Backend checkout ed86d5f  
+          # git -C TailwindTraders-Backend checkout ed86d5f  
 
       - name: 'Create Helm gvalues file'
         run: |
@@ -259,7 +259,7 @@ jobs:
 
       - name: 'build/push webapigw'
         run: |
-          git -C TailwindTraders-Backend checkout ed86d5f
+          # git -C TailwindTraders-Backend checkout ed86d5f
 
           docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
 
@@ -299,7 +299,7 @@ jobs:
 
           echo "::set-env name=pictures::$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)"
 
-          git -C TailwindTraders-Backend checkout ed86d5f
+          # git -C TailwindTraders-Backend checkout ed86d5f
 
       - name: 'helm install login api'
         run: |
