@@ -2,7 +2,7 @@
 
 Param (
     [parameter(Mandatory=$true)][string]$resourceGroup,
-    [parameter(Mandatory=$false)][string[]]$outputFile=$null,
+    [parameter(Mandatory=$false)][string]$outputFile=$null,
     [parameter(Mandatory=$false)][string]$rewardsResourceGroup="",
     [parameter(Mandatory=$false)][string]$rewardsDbPassword="",
     [parameter(Mandatory=$false)][string]$gvaluesTemplate="$PSScriptRoot/gvalues.template",
