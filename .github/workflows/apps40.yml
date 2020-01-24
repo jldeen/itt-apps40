@@ -171,7 +171,7 @@ jobs:
 
       - name: 'Create Helm gvalues file'
         run: |
-          pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -sqlPwd ${{ secrets.sqlServePassword }} -outputFile $tailwindChartValues
+          pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -outputFile $tailwindChartValues
 
       - name: 'Get ACR Container Information'
         run: |
