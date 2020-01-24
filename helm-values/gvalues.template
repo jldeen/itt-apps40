@@ -4,17 +4,26 @@ inf:
   sa: ttsa
   db:
     products:
-      host: {{dbhost}}
-      port: "1433"
-      catalog: products
-      user: {{dbuser}}
-      pwd: {{dbpwd}}
+      host: {{shoppinghost}}
+      auth: {{shoppingauth}}
     profile:
-      host: {{dbhost}}
+      host: {{shoppinghost}}
+      auth: {{shoppingauth}}
+    popularproducts:
+      host: {{shoppinghost}}
+      auth: {{shoppingauth}}
+    stock:
+      host: {{shoppinghost}}
+      auth: {{shoppingauth}}
+    cart:
+      host: {{shoppinghost}}
+      auth: {{shoppingauth}}
+    rewards:
+      host: {{rewardshost}}
       port: "1433"
-      catalog: profile
-      user: {{dbuser}}
-      pwd: {{dbpwd}}
+      catalog: rewardsdb
+      user: {{rewardsuser}}
+      pwd: {{rewardspwd}}
     coupons:
       user: {{couponsuser}}
       pwd: {{couponspwd}}
@@ -22,21 +31,6 @@ inf:
       port: "10255"
       dbName: Coupon
       collection: CouponCollection
-    popularproducts:
-      host: {{dbhost}}
-      port: "1433"
-      catalog: popularproducts
-      user: {{dbuser}}
-      pwd: {{dbpwd}}
-    stock:
-      host: {{pghost}}
-      port: "5432"
-      catalog: stockdb
-      user: {{pguser}}
-      pwd: {{pgpwd}}
-    cart:
-      host: {{carthost}}
-      auth: {{cartauth}}
   storage:
     productimages: {{storage}}product-list
     productdetailimages: {{storage}}product-detail
@@ -46,38 +40,38 @@ inf:
     id: {{appinsightsik}}
   ingress:
     products:
-      path: /product-api
+      path: /product-api{{ingressrewritepath}}
     profile:
-      path: /profile-api
+      path: /profile-api{{ingressrewritepath}}
     coupons:
-      path: /coupons-api
+      path: /coupons-api{{ingressrewritepath}}
     popularproducts:
-      path: /popular-products-api
+      path: /popular-products-api{{ingressrewritepath}}
     stock:
-      path: /stock-api
+      path: /stock-api{{ingressrewritepath}}
     imageclassifier:
-      path: /image-classifier-api
+      path: /image-classifier-api{{ingressrewritepath}}
     mobilebff:
-      path: /mobilebff
+      path: /mobilebff{{ingressrewritepath}}
     webbff:
-      path: /webbff
+      path: /webbff{{ingressrewritepath}}
     login:
-      path: /login-api
+      path: /login-api{{ingressrewritepath}}
     cart:
-      path: /cart-api
+      path: /cart-api{{ingressrewritepath}}
+    rewardsregistration:
+      path: /rewards-registration-api{{ingressrewritepath}}
   apiurls:
     popularproductsapiurl: http://popularproducts
-    productsapiurl: http://product
+    productsapiurl: http://product 
     profileapiurl: http://profile
     couponsapiurl: http://coupons
     stockapiurl: http://stock
     imageclassifierapiurl: http://imageclassifier
     loginapiurl: http://login
   registrationusers:
-    registerusers: false
+    registerusers: {{rewardsregistration}}
     registrationusersurl: http://rewards-registration/UserService.svc
-az:
-  productvisitsurl: ""
 
 # Shared ingress configurations
 ingress:
@@ -86,8 +80,8 @@ ingress:
     kubernetes.io/ingress.class: {{ingressclass}}
     ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    ingress.kubernetes.io/rewrite-target: /{{ingressrewritetarget}}
+    nginx.ingress.kubernetes.io/rewrite-target: /{{ingressrewritetarget}}
 #  hosts:
 #    - <guid>.<region>.aksapp.io   # NOT NEEDED. SET BY SCRIPTS
 
@@ -114,6 +108,6 @@ B2C:
 hpa:
   activated: false # set to true to deploy HPA for services
   cpu:
-    averageUtilization: 40
+    averageUtilization: 40 
   minReplicas: 1
   maxReplicas: 40
