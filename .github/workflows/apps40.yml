@@ -361,11 +361,8 @@ jobs:
 
       - name: "Label all pods for network policy"
         run: |
-          # remove label if exist
-          kubectl label -n twt pods --all role- > /dev/null && echo "Removing pod labels if exist"
-
           # add label  
-          kubectl label -n twt pods --all role=twt-app
+          kubectl label -n twt pods --all role=twt-app --overwrite=true
 
       - name: "Copy website images to storage"
         run: |
