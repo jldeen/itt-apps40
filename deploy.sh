@@ -171,6 +171,13 @@ helm install --name keda --namespace keda ./keda/chart/keda/ -f ./keda/chart/ked
 helm install --name rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD stable/rabbitmq
 
 cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-consumer
+data:
+  RabbitMqHost: YW1xcDovL3VzZXI6UEFTU1dPUkRAcmFiYml0bXEuZGVmYXVsdC5zdmMuY2x1c3Rlci5sb2NhbDo1Njcy
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -195,6 +202,9 @@ spec:
           - receive
         args:
           - 'amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672'
+        envFrom:
+        - secretRef:
+            name: rabbitmq-consumer
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/role: agent
@@ -204,12 +214,14 @@ spec:
       - key: virtual-kubelet.io/provider
         operator: Exists
       - key: azure.com/aci
-        effect: NoSchedule      
+        effect: NoSchedule    
 ---
 apiVersion: keda.k8s.io/v1alpha1
 kind: ScaledObject
 metadata:
   name: rabbitmq-consumer
+  annotations:
+    "helm.sh/hook": crd-install
   namespace: default
   labels:
     deploymentName: rabbitmq-consumer
@@ -223,7 +235,7 @@ spec:
   - type: rabbitmq
     metadata:
       queueName: hello
-      host: 'amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672'
+      host: RabbitMqHost
       queueLength  : '5'
 EOF
   
