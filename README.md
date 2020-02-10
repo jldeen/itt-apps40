@@ -272,7 +272,7 @@ code.
 To become a trained presenter, contact [scalablecontent@microsoft.com](mailto:scalablecontent@microsoft.com). In your email please include:
 
 - Complete name:
-- The code of this presentation: mod10
+- The code of this presentation: apps40
 - Link (ex: unlisted YouTube video) to a video of you presenting (~10 minutes).
   > It doesn't need to be this content, the important is to show your presenter skills
 
