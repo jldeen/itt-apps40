@@ -9,10 +9,6 @@ env:
   USER_ID: jessde
   subName: "Ignite The Tour"
 
-  # container info
-  # containerRegistry: neilpeterson
-  # containerVersion: v2
-
   # tailwind deployment
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
