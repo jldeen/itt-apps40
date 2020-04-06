@@ -83,16 +83,9 @@ $tokens.rewardsregistration=If ($rewardsResourceGroup) { $true } Else { $false }
 $appinsightsId=""
 
 ## Getting App Insights instrumentation key, if required
-$appInsightsName=$(az resource list -g $resourceGroup --resource-type Microsoft.Insights/components --query [].name | ConvertFrom-Json)
-if ($appInsightsName -and $appInsightsName.Count -eq 1) {
-    $appinsightsConfig=$(az monitor app-insights component show --app $appInsightsName[0] -g $resourceGroup -o json | ConvertFrom-Json)
-    Write-Host "Test if statement1" -ForegroundColor Red
-    Write-Host "appinsights config $($appinsightsConfig)" -ForegroundColor Red
-
-    if ($appinsightsConfig) {
-        $appinsightsId = $appinsightsConfig.instrumentationKey
-        Write-Host "App Insights Instrumentation Key: $($appinsightsId)" -ForegroundColor Yellow    
-    }
+$appInsightsName=$(az resource list -g $resourceGroup --resource-type Microsoft.Insights/components --query [].name -o tsv)
+if (-not [string]::IsNullOrEmpty($appInsightsName)) {
+    $appinsightsId=$(az monitor app-insights component show --app $appInsightsName -g $resourceGroup --query instrumentationKey -o tsv)
 }
 
 Write-Host "App Insights Instrumentation Key: $($appinsightsId)" -ForegroundColor Yellow
