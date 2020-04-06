@@ -163,8 +163,6 @@ jobs:
 
           git clone https://github.com/microsoft/TailwindTraders-Backend.git
 
-          # git -C TailwindTraders-Backend checkout ed86d5f
-
       - name: "Create Helm gvalues file"
         run: |
           pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -outputFile $tailwindChartValues
