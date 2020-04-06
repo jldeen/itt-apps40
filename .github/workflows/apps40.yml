@@ -34,123 +34,123 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # create resource group
-      - name: "Create Resource Group"
-        run: |
-          az group create --subscription "$subName" --name $resourceGroup --location $location --tags ITT-Tracking=$SESSION_CODE CreatedBy=$USER_ID
+      # # create resource group
+      # - name: "Create Resource Group"
+      #   run: |
+      #     az group create --subscription "$subName" --name $resourceGroup --location $location --tags ITT-Tracking=$SESSION_CODE CreatedBy=$USER_ID
 
-      # create VNet
-      - name: "Create Virtual Network"
-        run: |
-          # run check for idempotent pipeline
+      # # create VNet
+      # - name: "Create Virtual Network"
+      #   run: |
+      #     # run check for idempotent pipeline
 
-          vnetCheck=$(az network vnet list -g $resourceGroup -o tsv --query [0].name)
+      #     vnetCheck=$(az network vnet list -g $resourceGroup -o tsv --query [0].name)
 
-          if [[  $vnetCheck  ]]; then
-            echo 'Virtual Network already exists'
-          else
-            echo 'Virtual network does not exist. Creating virtual network now.'
-            # create vnet
-            az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
-          fi
+      #     if [[  $vnetCheck  ]]; then
+      #       echo 'Virtual Network already exists'
+      #     else
+      #       echo 'Virtual network does not exist. Creating virtual network now.'
+      #       # create vnet
+      #       az network vnet create --resource-group $resourceGroup --name k8sVNet --subscription "$subName" --address-prefixes 10.0.0.0/8 --subnet-name k8sSubnet --subnet-prefix 10.240.0.0/16
+      #     fi
 
-      # create virtual node subnet
-      - name: "Create Virtual Node Subnet"
-        run: |
-          # run check for idempotent pipeline
-          vnetSubnetCheck=$(az network vnet subnet list -g $resourceGroup --vnet-name k8sVNet -o tsv --query '[1].name')
+      # # create virtual node subnet
+      # - name: "Create Virtual Node Subnet"
+      #   run: |
+      #     # run check for idempotent pipeline
+      #     vnetSubnetCheck=$(az network vnet subnet list -g $resourceGroup --vnet-name k8sVNet -o tsv --query '[1].name')
 
-          if [[  $vnetSubnetCheck  ]]; then
-            echo 'Virtual node subnet already exists'
-          else
-            echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
-            # configure vnet subnet
-            az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16 
-          fi
+      #     if [[  $vnetSubnetCheck  ]]; then
+      #       echo 'Virtual node subnet already exists'
+      #     else
+      #       echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
+      #       # configure vnet subnet
+      #       az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16 
+      #     fi
 
-      # Deploy backend infrastructure
-      - name: "Setup Backend Infra"
-        env:
-          azureClientID: c9d0658b-81cc-40a7-bea6-6993fa5f2373
-        run: |
-          vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
+      # # Deploy backend infrastructure
+      # - name: "Setup Backend Infra"
+      #   env:
+      #     azureClientID: c9d0658b-81cc-40a7-bea6-6993fa5f2373
+      #   run: |
+      #     vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
 
-          az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
-            --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
-            sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
-            aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
-          echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
+      #     az group deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
+      #       --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
+      #       sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
+      #       aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
+      #     echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
 
-          AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
+      #     AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)
 
-          az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin --overwrite-existing
+      #     az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin --overwrite-existing
 
-      # Application Insights (using preview extension)
-      - name: "Create Application Insights"
-        run: |
-          az extension add -n application-insights
-          instrumentationKey=$(az monitor app-insights component show --app tt-app-insights --resource-group $resourceGroup --query instrumentationKey -o tsv)
+      # # Application Insights (using preview extension)
+      # - name: "Create Application Insights"
+      #   run: |
+      #     az extension add -n application-insights
+      #     instrumentationKey=$(az monitor app-insights component show --app tt-app-insights --resource-group $resourceGroup --query instrumentationKey -o tsv)
 
-      # create postgres DB, Disable SSL, and set Firewall
-      - name: "Create postgres DB, Disable SSL and set firewall"
-        run: |
-          POSTGRES=$(az postgres server list --resource-group $resourceGroup --query [0].name -o tsv)
-          az postgres db create -g $resourceGroup -s $POSTGRES -n stockdb
-          az postgres server update --resource-group $resourceGroup --name $POSTGRES --ssl-enforcement Disabled
-          az postgres server firewall-rule create --resource-group $resourceGroup --server-name $POSTGRES --name AllowAllAzureIps --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+      # # create postgres DB, Disable SSL, and set Firewall
+      # - name: "Create postgres DB, Disable SSL and set firewall"
+      #   run: |
+      #     POSTGRES=$(az postgres server list --resource-group $resourceGroup --query [0].name -o tsv)
+      #     az postgres db create -g $resourceGroup -s $POSTGRES -n stockdb
+      #     az postgres server update --resource-group $resourceGroup --name $POSTGRES --ssl-enforcement Disabled
+      #     az postgres server firewall-rule create --resource-group $resourceGroup --server-name $POSTGRES --name AllowAllAzureIps --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
 
-      - name: "Install Virtual Node on K8s cluster"
-        run: |
-          vNodeEnabledCheck=$(az aks show --resource-group $resourceGroup --name $AKS_CLUSTER --query addonProfiles.aciConnectorLinux.enabled -o tsv)
+      # - name: "Install Virtual Node on K8s cluster"
+      #   run: |
+      #     vNodeEnabledCheck=$(az aks show --resource-group $resourceGroup --name $AKS_CLUSTER --query addonProfiles.aciConnectorLinux.enabled -o tsv)
 
-          if [[ $vNodeEnabledCheck == *true*  ]]; then
-            echo "AKS Virtual Node add-on already enabled."
-          else
-            # Deploy virtual node 
-            az aks enable-addons \
-            --resource-group $resourceGroup  \
-            --name $AKS_CLUSTER \
-            --addons virtual-node \
-            --subnet-name VNSubnet
-          fi
+      #     if [[ $vNodeEnabledCheck == *true*  ]]; then
+      #       echo "AKS Virtual Node add-on already enabled."
+      #     else
+      #       # Deploy virtual node 
+      #       az aks enable-addons \
+      #       --resource-group $resourceGroup  \
+      #       --name $AKS_CLUSTER \
+      #       --addons virtual-node \
+      #       --subnet-name VNSubnet
+      #     fi
 
-      - name: "Create k8s twt namespace"
-        env:
-          nameSpace: twt
-        run: |
-          # twt namespace
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: $nameSpace
-          EOF
+      # - name: "Create k8s twt namespace"
+      #   env:
+      #     nameSpace: twt
+      #   run: |
+      #     # twt namespace
+      #     cat <<EOF | kubectl apply -f -
+      #     apiVersion: v1
+      #     kind: Namespace
+      #     metadata:
+      #       name: $nameSpace
+      #     EOF
 
-      - name: "Create keda namespace"
-        env:
-          nameSpace: keda
-        run: |
-          # keda namespace
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: $nameSpace
-          EOF
+      # - name: "Create keda namespace"
+      #   env:
+      #     nameSpace: keda
+      #   run: |
+      #     # keda namespace
+      #     cat <<EOF | kubectl apply -f -
+      #     apiVersion: v1
+      #     kind: Namespace
+      #     metadata:
+      #       name: $nameSpace
+      #     EOF
 
-      - name: "Create k8s service account"
-        env:
-          nameSpace: twt
-        run: |
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: ServiceAccount
-          imagePullSecrets:
-          - name: acr-auth
-          metadata:
-            name: ttsa
-            namespace: $nameSpace
-          EOF
+      # - name: "Create k8s service account"
+      #   env:
+      #     nameSpace: twt
+      #   run: |
+      #     cat <<EOF | kubectl apply -f -
+      #     apiVersion: v1
+      #     kind: ServiceAccount
+      #     imagePullSecrets:
+      #     - name: acr-auth
+      #     metadata:
+      #       name: ttsa
+      #       namespace: $nameSpace
+      #     EOF
 
   buildImages:
     runs-on: self-hosted
