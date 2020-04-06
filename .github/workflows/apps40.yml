@@ -7,7 +7,7 @@ env:
   location: eastus
   SESSION_CODE: itt-apps40
   USER_ID: jessde
-  subName: "Ignite The Tour"
+  subName: "Ignite the Tour"
 
   # tailwind deployment
   tailwindInfrastructure: deployment.json
