@@ -113,12 +113,6 @@ jobs:
             --addons virtual-node \
             --subnet-name VNSubnet
           fi
-
-      - name: "Managed Identity"
-        run: |
-          ACR_NAME=$(az acr list -g $resourceGroup --query "[0].name" -o tsv)
-
-          az aks update -n $AKS_CLUSTER -g $resourceGroup --attach-acr $(az acr show -n $ACR_NAME --query "id" -o tsv)
     
       - name: "Create k8s twt namespace"
         env:
