@@ -75,7 +75,7 @@ jobs:
         run: |
           vnetID=$(az network vnet subnet show --resource-group $resourceGroup --vnet-name k8sVNet --name k8sSubnet --query id -o tsv)
 
-          az deployment create -g $resourceGroup --template-file $tailwindInfrastructure \
+          az deployment create -g $resourceGroup -l $location --template-file $tailwindInfrastructure \
             --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
             sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
             aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
