@@ -3,14 +3,14 @@ on: [push]
 name: apps40-full-cicd
 
 env:
-  resourceGroup: actions40jd
+  resourceGroup: acrpull40jd
   location: eastus
   SESSION_CODE: itt-apps40
   USER_ID: jessde
   subName: "Ignite the Tour"
 
   # tailwind deployment
-  tailwindInfrastructure: deployment.json
+  tailwindInfrastructure: deployment-test.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: helm-values/generate-config.ps1
   tailwindChartValues: values.yaml
