@@ -28,6 +28,9 @@
       }
     },
     "variables": {
+      "managedIdentityRoleAssignmentId": "[guid(concat(resourceGroup().id, 'contributor'))]",
+      "identityName": "[concat('ttmanagedidentity',uniqueString(resourceGroup().id))]",
+      "contributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
       "acr_name": "[concat('ttacr',uniqueString(resourceGroup().id))]",
       "storage_name": "[concat('ttstorage',uniqueString(resourceGroup().id))]",
       "aks_name": "[concat('tailwindtradersaks',uniqueString(resourceGroup().id))]",
@@ -41,6 +44,26 @@
       "components_app_insights_name": "tt-app-insights"
     },
     "resources": [
+      {
+        "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+        "name": "[variables('identityName')]",
+        "apiVersion": "2018-11-30",
+        "location": "[resourceGroup().location]"
+      },
+      {
+        "type": "Microsoft.Authorization/roleAssignments",
+        "apiVersion": "2018-09-01-preview",
+        "name": "[variables('managedIdentityRoleAssignmentId')]",
+        "dependsOn": [
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+        ],
+        "properties": {
+          "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+          "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2015-08-31-preview').principalId]",
+          "scope": "[resourceGroup().id]",
+          "principalType": "ServicePrincipal"
+        }
+      },
       {
         "type": "microsoft.insights/components",
         "apiVersion": "2015-05-01",
@@ -63,7 +86,10 @@
         "location": "[resourceGroup().location]",
         "properties": {
           "adminUserEnabled": true
-        }
+        },
+        "dependsOn":[
+          "[resourceId('Microsoft.Authorization/roleAssignments', variables('managedIdentityRoleAssignmentId'))]"
+        ]
       },
       {
         "type": "Microsoft.Storage/storageAccounts",
@@ -129,6 +155,7 @@
           }
         },
         "dependsOn": [
+          "[resourceId('Microsoft.Authorization/roleAssignments', variables('managedIdentityRoleAssignmentId'))]",
           "[concat('Microsoft.Resources/deployments/', 'WorkspaceDeployment')]"
         ]
       },
