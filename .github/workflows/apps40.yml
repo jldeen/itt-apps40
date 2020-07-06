@@ -161,7 +161,7 @@ jobs:
           # fresh download
           rm -rf TailwindTraders-Backend
 
-          git clone https://github.com/jldeen/TailwindTraders-Backend.git
+          git clone https://github.com/Microsoft/TailwindTraders-Backend.git
 
       - name: "Create Helm gvalues file"
         run: |
