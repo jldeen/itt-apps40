@@ -113,7 +113,7 @@ jobs:
             --addons virtual-node \
             --subnet-name VNSubnet
           fi
-    
+
       - name: "Create k8s twt namespace"
         env:
           nameSpace: twt
@@ -161,7 +161,7 @@ jobs:
           # fresh download
           rm -rf TailwindTraders-Backend
 
-          git clone https://github.com/microsoft/TailwindTraders-Backend.git
+          git clone https://github.com/jldeen/TailwindTraders-Backend.git
 
       - name: "Create Helm gvalues file"
         run: |
