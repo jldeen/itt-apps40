@@ -11,7 +11,7 @@ env:
 
   # tailwind deployment
   tailwindBackendGit: https://github.com/Microsoft/TailwindTraders-Backend.git
-  tailwindFrontendGit: https://github.com/Microsoft/TailwindTraders-Website.git
+  tailwindFrontendGit: https://github.com/jldeen/TailwindTraders-Website.git
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: helm-values/generate-config.ps1
