@@ -244,7 +244,7 @@ jobs:
 
       - name: "build/push mobileapigw"
         run: |
-          git -C TailwindTraders-Backend checkout master
+          # git -C TailwindTraders-Backend checkout main
 
           docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
