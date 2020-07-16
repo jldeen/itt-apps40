@@ -7,7 +7,7 @@ env:
   location: eastus
   SESSION_CODE: itt-apps40
   USER_ID: jessde
-  subName: "ca-jessde-demo-test"
+  subName: "Ignite the Tour"
 
   # tailwind deployment
   tailwindBackendGit: https://github.com/Microsoft/TailwindTraders-Backend.git
