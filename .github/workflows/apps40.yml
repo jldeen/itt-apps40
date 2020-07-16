@@ -1,15 +1,17 @@
 on: [push]
 
-name: apps40-full-cicd
+name: ado30-full-cicd
 
 env:
-  resourceGroup: actions40jd
+  resourceGroup: ado30jd
   location: eastus
   SESSION_CODE: itt-apps40
   USER_ID: jessde
-  subName: "Ignite the Tour"
+  subName: "ca-jessde-demo-test"
 
   # tailwind deployment
+  tailwindBackendGit: https://github.com/Microsoft/TailwindTraders-Backend.git
+  tailwindFrontendGit: https://github.com/Microsoft/TailwindTraders-Website.git
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: helm-values/generate-config.ps1
@@ -78,7 +80,7 @@ jobs:
           az deployment group create --resource-group $resourceGroup --template-file $tailwindInfrastructure \
             --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
             sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
-            aksVersion=1.14.8 pgversion=10 vnetSubnetID=$vnetID
+            aksVersion=1.15.11 pgversion=10 vnetSubnetID=$vnetID
           echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
 
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query '[0].name' -o tsv)
@@ -161,7 +163,7 @@ jobs:
           # fresh download
           rm -rf TailwindTraders-Backend
 
-          git clone https://github.com/Microsoft/TailwindTraders-Backend.git
+          git clone $tailwindBackendGit
 
       - name: "Create Helm gvalues file"
         run: |
@@ -263,7 +265,8 @@ jobs:
           rm -rf TailwindTraders-Website
 
           #git clone https://github.com/microsoft/TailwindTraders-Website.git
-          git clone https://github.com/neilpeterson/TailwindTraders-Website.git
+          #git clone https://github.com/neilpeterson/TailwindTraders-Website.git
+          git clone $tailwindFrontendGit
 
           docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t $CONTAINER_REGISTRY/web:$GITHUB_SHA
 
