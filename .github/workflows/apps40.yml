@@ -10,7 +10,7 @@ env:
   subName: "Ignite the Tour"
 
   # tailwind deployment
-  tailwindBackendGit: https://github.com/Microsoft/TailwindTraders-Backend.git
+  tailwindBackendGit: https://github.com/jldeen/TailwindTraders-Backend.git
   tailwindFrontendGit: https://github.com/jldeen/TailwindTraders-Website.git
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
