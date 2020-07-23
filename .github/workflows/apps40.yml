@@ -158,6 +158,12 @@ jobs:
     runs-on: self-hosted
     needs: deployInfra
     steps:
+      # log into Azure
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: "Checkout TailwindTraders Backend Source"
         run: |
           # fresh download
@@ -278,6 +284,12 @@ jobs:
     env:
       nameSpace: twt
     steps:
+      # log into Azure
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: "configure deployment environment"
         run: |
           # set for this step
