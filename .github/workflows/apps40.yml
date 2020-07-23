@@ -27,8 +27,8 @@ jobs:
     runs-on: self-hosted
     steps:
       # checkout branch
-      - name: git checkout master branch
-        uses: actions/checkout@master
+      - name: git checkout main branch
+        uses: actions/checkout@v2
 
       # log into Azure
       - name: "Login via Azure CLI"
