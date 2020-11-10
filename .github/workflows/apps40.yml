@@ -80,7 +80,7 @@ jobs:
           az deployment group create --resource-group $resourceGroup --template-file $tailwindInfrastructure \
             --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
             sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
-            aksVersion=1.15.11 pgversion=10 vnetSubnetID=$vnetID
+            aksVersion=1.17.8 pgversion=10 vnetSubnetID=$vnetID
           echo "::set-env name=AKS_CLUSTER::$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)"
 
           AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query '[0].name' -o tsv)
