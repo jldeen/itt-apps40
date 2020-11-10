@@ -371,7 +371,7 @@ jobs:
       - name: "helm install web frontend"
         run: |
           # twt web
-          helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/web --set image.tag=$GITHUB_SHA TailwindTraders-Website/Deploy/helm/web/
+          helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml -f TailwindTraders-Website/Deploy/helm/values.b2c.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/web --set image.tag=$GITHUB_SHA TailwindTraders-Website/Deploy/helm/web/
 
       - name: "Label all pods for network policy"
         run: |
