@@ -1,13 +1,13 @@
 on: [push]
 
-name: ado30-full-cicd
+name: twt-full-cicd
 
 env:
-  resourceGroup: ado30jd
+  resourceGroup: twt2020jd
   location: eastus
   SESSION_CODE: itt-apps40
   USER_ID: jessde
-  subName: "Ignite the Tour"
+  subName: "ca-jessde-demo-test"
 
   # tailwind deployment
   tailwindBackendGit: https://github.com/jldeen/TailwindTraders-Backend.git
@@ -67,7 +67,7 @@ jobs:
           else
             echo 'Virtual node subnet does not exist. Creating virtual subnet now.'
             # configure vnet subnet
-            az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16 
+            az network vnet subnet create --resource-group $resourceGroup --subscription "$subName" --vnet-name k8sVNet --name VNSubnet  --address-prefix 10.241.0.0/16
           fi
 
       # Deploy backend infrastructure
@@ -108,7 +108,7 @@ jobs:
           if [[ $vNodeEnabledCheck == *true*  ]]; then
             echo "AKS Virtual Node add-on already enabled."
           else
-            # Deploy virtual node 
+            # Deploy virtual node
             az aks enable-addons \
             --resource-group $resourceGroup  \
             --name $AKS_CLUSTER \
@@ -163,6 +163,10 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # checkout branch
+      - name: git checkout main branch
+        uses: actions/checkout@v2
 
       - name: "Checkout TailwindTraders Backend Source"
         run: |
