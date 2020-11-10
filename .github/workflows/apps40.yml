@@ -397,6 +397,8 @@ jobs:
           # add kedacore repo
           helm repo add kedacore https://kedacore.github.io/charts
 
+          # add bitnami repo
+          helm repo add bitnami https://charts.bitnami.com/bitnami
 
           # add stable repo for helm 3
           helm repo add stable http://storage.googleapis.com/kubernetes-charts
@@ -408,13 +410,13 @@ jobs:
           helm upgrade --install keda kedacore/keda --namespace keda
 
           # rabbitmq install
-          helm upgrade --install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD stable/rabbitmq
+          helm upgrade --install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD bitnami/rabbitmq
 
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
           kind: Secret
           metadata:
-            name: rabbitmq-consumer
+            name: rabbitmq-consumer-secret
           data:
             RabbitMqHost: YW1xcDovL3VzZXI6UEFTU1dPUkRAcmFiYml0bXEuZGVmYXVsdC5zdmMuY2x1c3Rlci5sb2NhbDo1Njcy
           ---
@@ -435,48 +437,45 @@ jobs:
                   app: rabbitmq-consumer
               spec:
                 containers:
-                - name: rabbitmq-consumer
-                  image: jeffhollan/rabbitmq-client:dev
-                  imagePullPolicy: Always
-                  command:
-                    - receive
-                  args:
-                    - 'amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672'
-                  envFrom:
-                  - secretRef:
-                      name: rabbitmq-consumer
-                dnsPolicy: ClusterFirst
-                nodeSelector:
-                  kubernetes.io/role: agent
-                  beta.kubernetes.io/os: linux
-                  type: virtual-kubelet
-                tolerations:
-                - key: virtual-kubelet.io/provider
-                  operator: Exists
-                - key: azure.com/aci
-                  effect: NoSchedule    
+                  - name: rabbitmq-consumer
+                    image: jeffhollan/rabbitmq-client:dev
+                    imagePullPolicy: Always
+                    command:
+                      - receive
+                    args:
+                      - "amqp://user:PASSWORD@rabbitmq.default.svc.cluster.local:5672"
           ---
           apiVersion: keda.k8s.io/v1alpha1
           kind: ScaledObject
           metadata:
             name: rabbitmq-consumer
-            annotations:
-              "helm.sh/hook": crd-install
             namespace: default
             labels:
               deploymentName: rabbitmq-consumer
           spec:
             scaleTargetRef:
               deploymentName: rabbitmq-consumer
-            pollingInterval: 5   # Optional. Default: 30 seconds
-            cooldownPeriod: 30   # Optional. Default: 300 seconds
-            maxReplicaCount: 30  # Optional. Default: 100
+            pollingInterval: 5 # Optional. Default: 30 seconds
+            cooldownPeriod: 30 # Optional. Default: 300 seconds
+            maxReplicaCount: 30 # Optional. Default: 100
             triggers:
-            - type: rabbitmq
-              metadata:
-                queueName: hello
-                host: RabbitMqHost
-                queueLength  : '5'
+              - type: rabbitmq
+                metadata:
+                  queueName: hello
+                  queueLength: "5"
+                authenticationRef:
+                  name: rabbitmq-consumer-trigger
+          ---
+          apiVersion: keda.k8s.io/v1alpha1
+          kind: TriggerAuthentication
+          metadata:
+            name: rabbitmq-consumer-trigger
+            namespace: default
+          spec:
+            secretTargetRef:
+              - parameter: host
+                name: rabbitmq-consumer-secret
+                key: RabbitMqHost
           EOF
 
       - name: "Notes"
