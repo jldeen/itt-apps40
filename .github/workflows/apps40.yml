@@ -410,7 +410,7 @@ jobs:
           helm upgrade --install keda kedacore/keda --namespace keda
 
           # rabbitmq install
-          helm upgrade --install rabbitmq --set rabbitmq.username=user,rabbitmq.password=PASSWORD bitnami/rabbitmq
+          helm upgrade --install rabbitmq --set auth.username=user,auth.password=PASSWORD bitnami/rabbitmq
 
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
