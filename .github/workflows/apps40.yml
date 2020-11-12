@@ -352,7 +352,7 @@ jobs:
       - name: "helm install cart api"
         run: |
           # twt cart
-          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=$CONTAINER_REGISTRY/cart.api --set image.tag=$GITHUB_SHA $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none --set B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
+          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set fullnameOverride=cart --set image.repository=$CONTAINER_REGISTRY/cart.api --set image.tag=$GITHUB_SHA $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none --set B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
 
       - name: "helm install mobile bff api"
         run: |
