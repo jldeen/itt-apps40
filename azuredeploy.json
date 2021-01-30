@@ -1,7 +1,7 @@
 {
-	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-	"contentVersion": "1.0.0.0",
-	"parameters": {
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
 		"servicePrincipalId": {
 			"type": "string",
 			"metadata": {
@@ -33,7 +33,8 @@
 		"entrypoint": "/apps40/deploy.sh",
 		"sessionCode": "TWT"
 	},
-	"resources": [{
+	"resources": [
+		{
 			"type": "Microsoft.ManagedIdentity/userAssignedIdentities",
 			"name": "bootstrap-creds",
 			"apiVersion": "2018-11-30",

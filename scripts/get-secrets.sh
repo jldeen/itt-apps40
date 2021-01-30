@@ -6,9 +6,9 @@
 set -e
 
 # Set the following
-spName=actions40jd
-subName="Ignite the Tour"
-sqlServePassword=Password2020!
+spName=twt2020
+subName="ca-jessde-demo-test"
+sqlServePassword=$RANDOM
 
 # set the subscription
 az account set --subscription "$subName" && echo "Your default subscription has been set to: $subName"

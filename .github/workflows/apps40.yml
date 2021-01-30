@@ -3,15 +3,15 @@ on: [push]
 name: twt-full-cicd
 
 env:
-  resourceGroup: twt2020jd
+  resourceGroup: twt2021jd
   location: eastus
-  SESSION_CODE: itt-apps40
+  SESSION_CODE: ignite2021
   USER_ID: jessde
   subName: "ca-jessde-demo-test"
 
   # tailwind deployment
-  tailwindBackendGit: https://github.com/jldeen/TailwindTraders-Backend.git
-  tailwindFrontendGit: https://github.com/jldeen/TailwindTraders-Website.git
+  tailwindBackendGit: https://github.com/microsoft/TailwindTraders-Backend.git
+  tailwindFrontendGit: https://github.com/microsft/TailwindTraders-Website.git
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: helm-values/generate-config.ps1
