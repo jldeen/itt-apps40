@@ -89,18 +89,18 @@ jobs:
           az aks get-credentials --name $AKS_CLUSTER --resource-group $resourceGroup --admin --overwrite-existing
       
       # Validate AKS and ACR Connection; create if not exist
-      # - name: "Connect AKS and ACR"
-      #   run: |
-      #     acrName=$(az acr list -g $resourceGroup -o tsv --query '[0].name')
+      - name: "Connect AKS and ACR"
+        run: |
+          acrName=$(az acr list -g $resourceGroup -o tsv --query '[0].name')
           
-      #     validateACRfromAKS=$(az aks check-acr --name $AKS_CLUSTER --resource-group $resourceGroup --acr $acrName.azurecr.io | grep "SUCCESSFUL")
+          validateACRfromAKS=$(az aks check-acr --name $AKS_CLUSTER --resource-group $resourceGroup --acr $acrName.azurecr.io | grep "SUCCESSFUL")
 
-      #     if ! $validateACRfromAKS; then
-      #       echo "ACR and AKS connection does not exist. Adding it now..."
-      #       az aks update -n $AKS_CLUSTER -g $resourceGroup --attach-acr $acrName
-      #     else
-      #       echo "ACR and AKS connection already exists."
-      #     fi
+          if ! $validateACRfromAKS; then
+            echo "ACR and AKS connection does not exist. Adding it now..."
+            az aks update -n $AKS_CLUSTER -g $resourceGroup --attach-acr $acrName
+          else
+            echo "ACR and AKS connection already exists."
+          fi
 
       # Application Insights (using preview extension)
       - name: "Configure Application Insights"
@@ -193,7 +193,6 @@ jobs:
 
       - name: "Create Helm gvalues file"
         run: |
-          ls -la
           pwsh $tailwindChartValuesScript -resourceGroup $resourceGroup -outputFile $tailwindChartValues
 
       - name: "Get ACR Container Information"
