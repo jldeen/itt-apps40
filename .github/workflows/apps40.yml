@@ -11,7 +11,7 @@ env:
 
   # tailwind deployment
   tailwindBackendGit: https://github.com/microsoft/TailwindTraders-Backend.git
-  tailwindFrontendGit: https://github.com/microsft/TailwindTraders-Website.git
+  tailwindFrontendGit: https://github.com/microsoft/TailwindTraders-Website.git
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: helm-values/generate-config.ps1
@@ -274,8 +274,6 @@ jobs:
         run: |
           rm -rf TailwindTraders-Website
 
-          #git clone https://github.com/microsoft/TailwindTraders-Website.git
-          #git clone https://github.com/neilpeterson/TailwindTraders-Website.git
           git clone $tailwindFrontendGit
 
           docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t $CONTAINER_REGISTRY/web:$GITHUB_SHA
@@ -309,7 +307,7 @@ jobs:
           echo "CONTAINER_REGISTRY=$(az acr list -g $resourceGroup -o tsv --query [0].loginServer)" >> $GITHUB_ENV
 
           echo "pictures=$(az storage account list -g $resourceGroup --query [0].primaryEndpoints.blob -o tsv)" >> $GITHUB_ENV
-          
+
           # git -C TailwindTraders-Backend checkout ed86d5f
 
       - name: "helm install login api"
