@@ -10,8 +10,8 @@ env:
   subName: "ca-jessde-demo-test"
 
   # tailwind deployment
-  tailwindBackendGit: https://github.com/microsoft/TailwindTraders-Backend.git
-  tailwindFrontendGit: https://github.com/microsoft/TailwindTraders-Website.git
+  tailwindBackendGit: https://github.com/jldeen/TailwindTraders-Backend.git
+  tailwindFrontendGit: https://github.com/jldeen/TailwindTraders-Website.git
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: helm-values/generate-config.ps1
@@ -185,11 +185,11 @@ jobs:
 
       - name: "Checkout TailwindTraders Backend Source"
         run: |
-          # fresh download
-          # test
           rm -rf TailwindTraders-Backend
 
           git clone $tailwindBackendGit
+
+          git checkout dotnet5andb2k8s
 
       - name: "Create Helm gvalues file"
         run: |
@@ -270,16 +270,12 @@ jobs:
 
       - name: "build/push mobileapigw"
         run: |
-          # git -C TailwindTraders-Backend checkout main
-
           docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/mobileapigw:$GITHUB_SHA
 
       - name: "build/push webapigw"
         run: |
-          # git -C TailwindTraders-Backend checkout ed86d5f
-
           docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
 
           docker push $CONTAINER_REGISTRY/webapigw:$GITHUB_SHA
@@ -289,6 +285,8 @@ jobs:
           rm -rf TailwindTraders-Website
 
           git clone $tailwindFrontendGit
+
+          git checkout Bridge2K8sSupport
 
           docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t $CONTAINER_REGISTRY/web:$GITHUB_SHA
 
