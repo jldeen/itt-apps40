@@ -189,7 +189,7 @@ jobs:
 
           git clone $tailwindBackendGit
 
-          cd $GITHUB_WORKSPACE/TailwindTraders-Backend && git checkout dotnet5andb2k8s
+          cd $GITHUB_WORKSPACE/TailwindTraders-Backend && git checkout dotnet5andb2K8s
 
       - name: "Create Helm gvalues file"
         run: |
