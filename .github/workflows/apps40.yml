@@ -189,7 +189,7 @@ jobs:
 
           git clone $tailwindBackendGit
 
-          cd $GITHUB_WORKSPACE/TailwindTraders-Backend && git checkout dotnet5andb2K8s
+          cd $GITHUB_WORKSPACE/TailwindTraders-Backend && git checkout feature/net5andbridge2k8s
 
       - name: "Create Helm gvalues file"
         run: |
@@ -286,7 +286,7 @@ jobs:
 
           git clone $tailwindFrontendGit
 
-          cd $GITHUB_WORKSPACE/TailwindTraders-Website && git checkout Bridge2K8sSupport
+          cd $GITHUB_WORKSPACE/TailwindTraders-Website && git checkout feature/net5andbridge2k8s
 
           docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t $CONTAINER_REGISTRY/web:$GITHUB_SHA
 
