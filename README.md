@@ -13,7 +13,7 @@ In this session, you’ll see how Tailwind Traders took a containerized applicat
 | Resources  | Links                                                                                                                                                                                                             |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PowerPoint | - [Presentation](presentations.md)                                                                                                                                                                                |
-| Videos     | - [Dry Run Rehearsal](https://globaleventcdn.blob.core.windows.net/assets/apps/apps40/directors-cut.mp4) <br/>- [Microsoft Ignite Orlando Recording](https://myignite.techcommunity.microsoft.com/sessions/83033) |
+| Videos     | - [Dry Run Rehearsal](https://globaleventcdn.blob.core.windows.net/assets/apps/apps40/directors-cut.mp4) <br/>- [Microsoft Ignite Orlando Recording](https://myignite.techcommunity.microsoft.com/sessions/83033?WT.mc_id=devops-0000-jessde) |
 | Demos      | - [Demo 1 - Scale Demo](#running-scale-demo) <br/>- [Demo 2 - Network policy](#network-policy) <br/>- [Demo 3 - Availability Zones](#availability-zones)                                                          |
 
 ## Regions this code will work with
@@ -24,9 +24,9 @@ In this session, you’ll see how Tailwind Traders took a containerized applicat
 - West Europe​
 - West US 2
 
-In order to deploy this template, you need an Azure Service Principal. If needed, use the `az ad sp create-for-rbac` command to create the service principal. See [az ad sp create-for-rbac](https://docs.microsoft.com/en-us/cli/azure/ad/sp?WT.mc_id=none-github-nepeters&view=azure-cli-latest#az-ad-sp-create-for-rbac) for more information.
+In order to deploy this template, you need an Azure Service Principal. If needed, use the `az ad sp create-for-rbac` command to create the service principal. See [az ad sp create-for-rbac](https://docs.microsoft.com/cli/azure/ad/sp?WT.mc_id=devops-0000-jessde&view=azure-cli-latest#az-ad-sp-create-for-rbac) for more information.
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fscotty-c%2Fignite-learning-paths%2Fmaster%2Fapps%2Fapps40%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/?WT.mc_id=devops-0000-jessde#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fscotty-c%2Fignite-learning-paths%2Fmaster%2Fapps%2Fapps40%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
@@ -286,8 +286,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore -->
 <table>
 <tr>
-    <td align="center"><a href="https://developer.microsoft.com/en-us/advocates/scott-coulton">
-        <img src="https://developer.microsoft.com/en-us/advocates/media/profiles/scott-coulton.png" width="100px;" alt="Scott Coulton"/><br />
+    <td align="center"><a href="https://developer.microsoft.com/advocates/scott-coulton?WT.mc_id=devops-0000-jessde">
+        <img src="https://developer.microsoft.com/advocates/media/profiles/scott-coulton.png?WT.mc_id=devops-0000-jessde" width="100px;" alt="Scott Coulton"/><br />
         <sub><b>Scott Coulton</b></sub></a><br />
             <a href="https://web.microsoftstream.com/video/191dfd60-e2b3-4396-b759-774aec5f1dee" title="talk">📢</a>
             <a href="https://github.com/microsoft/ignite-learning-paths/tree/master/apps/apps40" title="Documentation">📖</a> 
