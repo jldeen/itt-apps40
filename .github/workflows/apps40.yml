@@ -1,5 +1,7 @@
-on: [push]
-
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
 name: twt-full-cicd
 
 env:
@@ -24,7 +26,7 @@ env:
 
 jobs:
   deployInfra:
-    runs-on: self-hosted
+    runs-on: ubuntu-18.04
     steps:
       # checkout branch
       - name: git checkout main branch
@@ -80,7 +82,7 @@ jobs:
           az deployment group create --resource-group $resourceGroup --template-file $tailwindInfrastructure \
             --parameters servicePrincipalId=$azureClientID servicePrincipalSecret=${{ secrets.CLIENT_SECRET }} \
             sqlServerAdministratorLogin=$sqlServerUser sqlServerAdministratorLoginPassword=${{ secrets.sqlServePassword }} \
-            aksVersion=1.18.10 pgversion=10 vnetSubnetID=$vnetID
+            aksVersion=1.21.2 pgversion=10 vnetSubnetID=$vnetID
           
           echo "AKS_CLUSTER=$(az aks list --resource-group $resourceGroup --query [0].name -o tsv)" >> $GITHUB_ENV
 
@@ -170,7 +172,7 @@ jobs:
           EOF
 
   buildImages:
-    runs-on: self-hosted
+    runs-on: ubuntu-18.04
     needs: deployInfra
     steps:
       # log into Azure
@@ -293,7 +295,7 @@ jobs:
           docker push $CONTAINER_REGISTRY/web:$GITHUB_SHA
 
   deployMicroservices:
-    runs-on: self-hosted
+    runs-on: ubuntu-18.04
     needs: buildImages
     env:
       nameSpace: twt
