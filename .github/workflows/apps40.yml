@@ -7,20 +7,20 @@ name: twt-full-cicd
 env:
   # The name of the resource group to be created. All resources will be place
   # in the resource group and start with name.
-  RG_NAME: twt2021jd
+  RG_NAME: twt2021downgrade
 
   # The location to store the meta data for the deployment.
   LOCATION: eastus
 
   # The version of k8s control plane.
-  K8S_VERSION: "1.21.2"
+  K8S_VERSION: "1.18.17"
 
   # Subscription name for deployment to occurr
   subName: "ca-jessde-demo-test"
 
   # tailwind deployment
-  tailwindBackendGit: https://github.com/jldeen/TailwindTraders-Backend.git
-  tailwindFrontendGit: https://github.com/jldeen/TailwindTraders-Website.git
+  tailwindBackendGit: https://github.com/TailwindTradersEcommerce/TailwindTraders-Backend.git
+  tailwindFrontendGit: https://github.com/TailwindTradersEcommerce/TailwindTraders-Website.git
   tailwindInfrastructure: deployment.json
   tailwindCharts: TailwindTraders-Backend/Deploy/helm
   tailwindChartValuesScript: TailwindTraders-Backend/Deploy/powershell/Generate-Config.ps1
@@ -33,7 +33,7 @@ env:
 
 jobs:
   deployInfra:
-    runs-on: ubuntu-18.04
+    runs-on: self-hosted
     steps:
       # checkout branch
       - name: git checkout main branch
@@ -75,7 +75,7 @@ jobs:
       acrPass: ${{ steps.azure-deployment.outputs.acrPass }}
 
   buildImages:
-    runs-on: ubuntu-18.04
+    runs-on: self-hosted
     needs: deployInfra
     steps:
       # log into Azure
@@ -88,16 +88,18 @@ jobs:
       - name: git checkout main branch
         uses: actions/checkout@v2
 
+      # checkout frontend
+      - name: "Checkout TailwindTraders Frontend Source"
+        run: |
+          rm -rf TailwindTraders-Website
+          git clone $tailwindFrontendGit
+          git -C TailwindTraders-Website checkout main
+
       - name: "Checkout TailwindTraders Backend Source"
         run: |
-
+          rm -rf TailwindTraders-Backend
           git clone $tailwindBackendGit
-
-          cd $GITHUB_WORKSPACE/TailwindTraders-Backend && git checkout feature/net5andbridge2k8s
-
-      - name: "Create Helm gvalues file"
-        run: |
-          pwsh $tailwindChartValuesScript -resourceGroup $RG_NAME -outputFile $GITHUB_WORKSPACE/$tailwindChartValues
+          cd $GITHUB_WORKSPACE/TailwindTraders-Backend && git checkout main
 
       - name: "Clean Up"
         run: |
@@ -111,90 +113,78 @@ jobs:
       - name: "docker login"
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ secrets.AZURE_SERVER }}
-          username: ${{ secrets.AZURE_USERNAME }}
-          password: ${{ secrets.AZURE_PASSWORD }}
+          login-server: ${{ needs.deployInfra.outputs.acrLoginServer }}
+          username: ${{ needs.deployInfra.outputs.acrAdminName }}
+          password: ${{ needs.deployInfra.outputs.acrPass }}
 
       - name: "build/push cart.api"
         run: |
-          docker build $dPath/Services/Tailwind.Traders.Cart.Api/ -t ${{ secrets.AZURE_SERVER }}/cart.api:$GITHUB_SHA
+          docker build $dPath/Services/Tailwind.Traders.Cart.Api/ -t ${{ needs.deployInfra.outputs.acrLoginServer }}/cart.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/cart.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/cart.api:$GITHUB_SHA
 
       - name: "build/push product.api"
         run: |
-          docker build -f $dPath/Services/Tailwind.Traders.Product.Api/Dockerfile $dPath -t ${{ secrets.AZURE_SERVER }}/product.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.Product.Api/Dockerfile $dPath -t ${{ needs.deployInfra.outputs.acrLoginServer }}/product.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/product.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/product.api:$GITHUB_SHA
 
       - name: "build/push profile.api"
         run: |
-          docker build -f $dPath/Services/Tailwind.Traders.Profile.Api/Dockerfile $dPath -t ${{ secrets.AZURE_SERVER }}/profile.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.Profile.Api/Dockerfile $dPath -t ${{ needs.deployInfra.outputs.acrLoginServer }}/profile.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/profile.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/profile.api:$GITHUB_SHA
 
       - name: "build/push login.api"
         run: |
-          docker build -f $dPath/Services/Tailwind.Traders.Login.Api/Dockerfile $dPath -t ${{ secrets.AZURE_SERVER }}/login.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.Login.Api/Dockerfile $dPath -t ${{ needs.deployInfra.outputs.acrLoginServer }}/login.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/login.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/login.api:$GITHUB_SHA
 
       - name: "build/push coupon.api"
         run: |
-          docker build $dPath/Services/Tailwind.Traders.Coupon.Api/ -t ${{ secrets.AZURE_SERVER }}/coupon.api:$GITHUB_SHA
+          docker build $dPath/Services/Tailwind.Traders.Coupon.Api/ -t ${{ needs.deployInfra.outputs.acrLoginServer }}/coupon.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/coupon.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/coupon.api:$GITHUB_SHA
 
       - name: "build/push popular-product.api"
         run: |
-          docker build -f $dPath/Services/Tailwind.Traders.PopularProduct.Api/Dockerfile $dPath -t ${{ secrets.AZURE_SERVER }}/popular-product.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.PopularProduct.Api/Dockerfile $dPath -t ${{ needs.deployInfra.outputs.acrLoginServer }}/popular-product.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/popular-product.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/popular-product.api:$GITHUB_SHA
 
       - name: "build/push stock.api"
         run: |
-          docker build $dPath/Services/Tailwind.Traders.Stock.Api/ -t ${{ secrets.AZURE_SERVER }}/stock.api:$GITHUB_SHA
+          docker build $dPath/Services/Tailwind.Traders.Stock.Api/ -t ${{ needs.deployInfra.outputs.acrLoginServer }}/stock.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/stock.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/stock.api:$GITHUB_SHA
 
       - name: "build/push image-classifier.api"
         run: |
-          docker build -f $dPath/Services/Tailwind.Traders.ImageClassifier.Api/Dockerfile $dPath -t ${{ secrets.AZURE_SERVER }}/image-classifier.api:$GITHUB_SHA
+          docker build -f $dPath/Services/Tailwind.Traders.ImageClassifier.Api/Dockerfile $dPath -t ${{ needs.deployInfra.outputs.acrLoginServer }}/image-classifier.api:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/image-classifier.api:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/image-classifier.api:$GITHUB_SHA
 
       - name: "build/push mobileapigw"
         run: |
-          docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t ${{ secrets.AZURE_SERVER }}/mobileapigw:$GITHUB_SHA
+          docker build -f $dPath/ApiGWs/Tailwind.Traders.Bff/Dockerfile $dPath -t ${{ needs.deployInfra.outputs.acrLoginServer }}/mobileapigw:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/mobileapigw:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/mobileapigw:$GITHUB_SHA
 
       - name: "build/push webapigw"
         run: |
-          docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t ${{ secrets.AZURE_SERVER }}/webapigw:$GITHUB_SHA
+          docker build -f $dPath/ApiGWs/Tailwind.Traders.WebBff/Dockerfile $dPath -t ${{ needs.deployInfra.outputs.acrLoginServer }}/webapigw:$GITHUB_SHA
 
-          docker push ${{ secrets.AZURE_SERVER }}/webapigw:$GITHUB_SHA
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/webapigw:$GITHUB_SHA
 
-      - name: "buid/push web frontend"
+      - name: "build/push web frontend"
         run: |
-          rm -rf TailwindTraders-Website
+          docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t ${{ needs.deployInfra.outputs.acrLoginServer }}/web:$GITHUB_SHA
 
-          git clone $tailwindFrontendGit
-
-          cd $GITHUB_WORKSPACE/TailwindTraders-Website && git checkout feature/net5andbridge2k8s
-
-          docker build $GITHUB_WORKSPACE/TailwindTraders-Website/Source/Tailwind.Traders.Web/ -t ${{ secrets.AZURE_SERVER }}/web:$GITHUB_SHA
-
-          docker push ${{ secrets.AZURE_SERVER }}/web:$GITHUB_SHA
-
-      - name: Publish Helm Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: drop
-          path: $GITHUB_WORKSPACE/$tailwindChartValues
+          docker push ${{ needs.deployInfra.outputs.acrLoginServer }}/web:$GITHUB_SHA
 
   deployMicroservices:
-    runs-on: ubuntu-18.04
+    runs-on: self-hosted
     needs: [deployInfra, buildImages]
     env:
       nameSpace: twt
@@ -209,18 +199,17 @@ jobs:
       - name: git checkout main branch
         uses: actions/checkout@v2
 
-      - name: "Checkout TailwindTraders Source"
+      - name: "Checkout TailwindTraders Backend Source"
         run: |
-
+          rm -rf TailwindTraders-Backend
           git clone $tailwindBackendGit
+          git -C TailwindTraders-Backend checkout main
 
-          cd $GITHUB_WORKSPACE/TailwindTraders-Backend && git checkout feature/net5andbridge2k8s
-
-          cd $GITHUB_WORKSPACE
-
+      - name: "Checkout TailwindTraders Frontend Source"
+        run: |
+          rm -rf TailwindTraders-Website
           git clone $tailwindFrontendGit
-
-          cd $GITHUB_WORKSPACE/TailwindTraders-Website && git checkout feature/net5andbridge2k8s
+          git -C TailwindTraders-Website checkout main
 
       - name: "Create Helm gvalues file"
         run: |
@@ -236,10 +225,6 @@ jobs:
 
           echo "INGRESS=$(az aks show -n $AKS_CLUSTER -g $RG_NAME --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -o tsv)" >> $GITHUB_ENV
 
-          # acr/container registry variables
-
-          echo "CONTAINER_REGISTRY=$(az acr list -g $RG_NAME -o tsv --query [0].loginServer)" >> $GITHUB_ENV
-
           echo "pictures=$(az storage account list -g $RG_NAME --query [0].primaryEndpoints.blob -o tsv)" >> $GITHUB_ENV
       
       - name: Get Dev K8s Context
@@ -252,61 +237,57 @@ jobs:
       - name: "helm install login api"
         run: |
           # twt login
-          helm upgrade --install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --create-namespace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/login.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
+          helm upgrade --install my-tt-login -f $tailwindChartValues --namespace=$nameSpace --create-namespace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/login.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/login-api
 
       - name: "helm install product api"
         run: |
           # twt product
-          helm upgrade --install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/product.api --set image.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail --set az.productvisitsurl=http://your-product-visits-af-here $tailwindCharts/products-api
+          helm upgrade --install my-tt-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/product.api --set image.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list --set inf.storage.productdetailimages=${pictures}product-detail --set az.productvisitsurl=http://your-product-visits-af-here $tailwindCharts/products-api
 
       - name: "helm install coupon api"
         run: |
           # twt coupon
-          helm upgrade --install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/coupon.api --set image.tag=$GITHUB_SHA --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
+          helm upgrade --install my-tt-coupon -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/coupon.api --set image.tag=$GITHUB_SHA --set inf.storage.couponimage=${pictures}coupon-list $tailwindCharts/coupons-api
 
       - name: "helm install profile api"
         run: |
           # twt profile
-          helm upgrade --install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/profile.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
+          helm upgrade --install my-tt-profile -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/profile.api --set image.tag=$GITHUB_SHA --set inf.storage.profileimages=${pictures}profiles-list $tailwindCharts/profiles-api
 
       - name: "helm install popular product api"
         run: |
           # twt popular product
-          helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/popular-product.api --set image.tag=$GITHUB_SHA --set initImage.repository=${{ secrets.AZURE_SERVER }}/popular-product-seed.api --set initImage.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
+          helm upgrade --install my-tt-popular-product -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/popular-product.api --set image.tag=$GITHUB_SHA --set initImage.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/popular-product-seed.api --set initImage.tag=$GITHUB_SHA --set inf.storage.productimages=${pictures}product-list $tailwindCharts/popular-products-api
 
       - name: "helm install stock api"
         run: |
           # twt stock
-          helm upgrade --install my-tt-stock -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/stock.api --set image.tag=$GITHUB_SHA $tailwindCharts/stock-api
+          helm upgrade --install my-tt-stock -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/stock.api --set image.tag=$GITHUB_SHA $tailwindCharts/stock-api
 
       - name: "helm install image classifier api"
         run: |
           # twt image classifier
-          helm upgrade --install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/image-classifier.api --set image.tag=$GITHUB_SHA $tailwindCharts/image-classifier-api
+          helm upgrade --install my-tt-image-classifier -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/image-classifier.api --set image.tag=$GITHUB_SHA $tailwindCharts/image-classifier-api
 
       - name: "helm install cart api"
         run: |
           # twt cart
-          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set fullnameOverride=cart --set image.repository=${{ secrets.AZURE_SERVER }}/cart.api --set image.tag=$GITHUB_SHA $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none --set B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
+          helm upgrade --install my-tt-cart -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set fullnameOverride=cart --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/cart.api --set image.tag=$GITHUB_SHA $tailwindCharts/cart-api --set B2C.clientID=none --set B2C.identityMetadata=none --set B2C.issuer=none --set B2C.policyName=none --set B2C.tenantID=none
 
       - name: "helm install mobile bff api"
         run: |
           # twt mobile bff
-          helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/mobileapigw --set image.tag=$GITHUB_SHA --set probes.readiness=null $tailwindCharts/mobilebff
-
-          # helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/mobileapigw --set image.tag=v2 --set probes.readiness=null $tailwindCharts/mobilebff
+          helm upgrade --install my-tt-mobilebff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/mobileapigw --set image.tag=$GITHUB_SHA --set probes.readiness=null $tailwindCharts/mobilebff
 
       - name: "helm install web bff api"
         run: |
           # twt web bff
-          helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/webapigw --set image.tag=$GITHUB_SHA $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
-
-          # helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=neilpeterson/webapigw --set image.tag=v2 $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
+          helm upgrade --install my-tt-webbff -f $tailwindChartValues --namespace=$nameSpace --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/webapigw --set image.tag=$GITHUB_SHA $tailwindCharts/webbff --set B2C.Authority=none --set B2C.B2CIssuer=none
 
       - name: "helm install web frontend"
         run: |
           # twt web
-          helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml -f TailwindTraders-Website/Deploy/helm/values.b2c.yaml --namespace=$nameSpace --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=${{ secrets.AZURE_SERVER }}/web --set image.tag=$GITHUB_SHA TailwindTraders-Website/Deploy/helm/web/
+          helm upgrade --install web -f TailwindTraders-Website/Deploy/helm/gvalues.yaml -f TailwindTraders-Website/Deploy/helm/values.b2c.yaml --namespace=$nameSpace --set inf.appinsights.id=${{ needs.deployInfra.outputs.InstrumentationKey }} --set ingress.protocol=http --set ingress.hosts={$INGRESS} --set image.repository=${{ needs.deployInfra.outputs.acrLoginServer }}/web --set image.tag=$GITHUB_SHA TailwindTraders-Website/Deploy/helm/web/
 
       - name: "Label all pods for network policy"
         run: |
