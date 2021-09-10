@@ -183,9 +183,8 @@ resource aks 'Microsoft.ContainerService/managedClusters@2020-09-01' = {
       }
     ]
     networkProfile: {
-      networkPolicy: 'calico'
       loadBalancerSku: 'standard'
-      networkPlugin: 'azure'
+      networkPlugin: 'kubenet'
     }
     apiServerAccessProfile: {
       enablePrivateCluster: false
